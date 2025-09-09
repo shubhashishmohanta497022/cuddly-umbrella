@@ -1,0 +1,3719 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark light" />
+  <title>JARVIS - Personal AI Assistant v1.0</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg: #0f0f10;
+      --bg-primary: #1a1b1e;
+      --bg-secondary: #222327;
+      --text-primary: #ffffff;
+      --text-secondary: #bdbec7;
+      --border-color: #2e3035;
+      --accent-primary: #6ea8fe;
+      --accent-secondary: #9b76ff;
+      --danger: #ff5e66;
+      --success: #1ad760;
+      --warning: #f59e0b;
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --border-radius: 16px;
+      --transition: all 0.3s ease;
+    }
+
+    html[data-theme="light"] {
+      --bg: #f5f7fb;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f1f3f6;
+      --text-primary: #111318;
+      --text-secondary: #444957;
+      --border-color: #e5e8ef;
+      --accent-primary: #3b82f6;
+      --accent-secondary: #7c3aed;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    * { 
+      box-sizing: border-box; 
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: var(--bg);
+      color: var(--text-primary);
+      padding: 20px;
+      min-height: 100vh;
+      transition: filter 0.3s ease;
+    }
+    
+    .app-container { 
+      max-width: 980px; 
+      margin: 0 auto; 
+      padding: 24px 16px 32px; 
+      transition: filter 0.3s ease;
+    }
+    
+    /* Header Styles */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 10px 14px;
+      position: sticky;
+      top: 12px;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+    
+    .logo {
+      font-weight: 700;
+      font-size: 22px;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .control-group {
+      display: flex;
+      gap: 6px;
+    }
+    
+    /* Button Styles */
+    .btn, button {
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 14px;
+      transition: var(--transition);
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .btn:hover, button:hover {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      transform: translateY(-1px);
+    }
+    
+    .btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 2px rgba(110, 168, 254, 0.2);
+    }
+    
+    .btn.danger {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: white;
+    }
+    
+    .btn.success {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+    
+    /* Chat Styles */
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-top: 24px;
+    }
+    
+    .chat-container {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    
+    .chat-header {
+      background: var(--bg-secondary);
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .chat-title {
+      font-weight: 600;
+      font-size: 18px;
+    }
+    
+    .chat-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .chat-messages {
+      height: 400px;
+      overflow-y: auto;
+      padding: 16px;
+      scroll-behavior: smooth;
+    }
+    
+    .message {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      align-items: flex-start;
+    }
+    
+    .user-message {
+      flex-direction: row-reverse;
+    }
+    
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      flex-shrink: 0;
+    }
+    
+    .user-message .avatar {
+      background: linear-gradient(135deg, var(--warning), var(--danger));
+    }
+    
+    .message-content {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 16px;
+      max-width: 70%;
+      position: relative;
+    }
+    
+    .user-message .message-content {
+      background: var(--accent-primary);
+      color: white;
+      border-color: var(--accent-primary);
+    }
+    
+    .message-time {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      display: block;
+    }
+    
+    .user-message .message-time {
+      color: rgba(255,255,255,0.8);
+    }
+    
+    .chat-input {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+    }
+    
+    .input-form {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    
+    .message-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 15px;
+      resize: none;
+      min-height: 20px;
+      max-height: 120px;
+    }
+    
+    .message-input:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 2px rgba(110, 168, 254, 0.2);
+    }
+    
+    .send-btn {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+      min-width: 44px;
+      border-radius: 12px;
+    }
+    
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: var(--transition);
+    }
+    
+    .modal-overlay[aria-hidden="false"] {
+      opacity: 1;
+      pointer-events: all;
+    }
+    
+    .modal-content {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow);
+      transform: scale(0.95);
+      transition: var(--transition);
+    }
+    
+    .modal-overlay[aria-hidden="false"] .modal-content {
+      transform: scale(1);
+    }
+    
+    .modal-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-secondary);
+    }
+    
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    
+    .close-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+    
+    .close-btn:hover {
+      background: var(--bg-primary);
+    }
+    
+    .modal-body {
+      padding: 20px 24px;
+    }
+    
+    /* Settings Grid */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    
+    .feature-btn {
+      padding: 20px;
+      text-align: center;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+      min-height: auto;
+      display: block;
+      width: 100%;
+    }
+    
+    .feature-btn:hover {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      transform: translateY(-2px);
+    }
+    
+    .feature-btn i {
+      font-size: 24px;
+      margin-bottom: 12px;
+      display: block;
+      color: var(--accent-primary);
+    }
+    
+    .feature-btn:hover i {
+      color: white;
+    }
+    
+    .feature-btn .title {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+    
+    .feature-btn:hover .title {
+      color: white;
+    }
+    
+    .feature-btn .desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+    
+    .feature-btn:hover .desc {
+      color: rgba(255, 255, 255, 0.8);
+    }
+    
+    /* Voice Animation */
+    .voice-listening {
+      animation: voicePulse 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes voicePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    /* Memory Management Section */
+    .memory-controls {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .memory-stats {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .stat-item:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    
+    /* Analytics Charts */
+    .chart-container {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 16px 0;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .chart-placeholder {
+      color: var(--text-secondary);
+      text-align: center;
+      font-size: 14px;
+    }
+    
+    /* Goals Modal */
+    .goal-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .goal-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    /* Persona Selector */
+    .persona-selector {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      font-size: 15px;
+      margin-bottom: 16px;
+    }
+    
+    /* Reflection Report */
+    .reflection-section {
+      margin-bottom: 20px;
+    }
+    
+    .reflection-title {
+      font-size: 18px;
+      margin-bottom: 12px;
+      color: var(--accent-primary);
+    }
+    
+    .reflection-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+    }
+    
+    /* Lock Screen */
+    .lock-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      color: white;
+      text-align: center;
+    }
+    
+    .lock-screen h2 {
+      font-size: 28px;
+      margin-bottom: 16px;
+    }
+    
+    .lock-screen p {
+      margin-bottom: 24px;
+      opacity: 0.8;
+    }
+    
+    .lock-screen input {
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      width: 250px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    
+    /* Pattern Grid */
+    .pattern-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 60px);
+      grid-gap: 10px;
+      justify-content: center;
+      margin: 16px 0;
+    }
+    
+    .pattern-dot {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #333;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    
+    .pattern-dot.active {
+      background: var(--accent-primary);
+    }
+    
+    /* Theme Toggle Switch */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+    }
+    
+    .theme-toggle-label {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+      background-color: var(--accent-primary);
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    
+    /* Meeting Whisperer Overlay */
+    #jarvis-whisper-overlay {
+      position: fixed;
+      right: 12px;
+      bottom: 12px;
+      z-index: 5000;
+      background: rgba(20,20,24,0.85);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 10px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+    
+    /* Security Section Styles */
+    .security-section {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+    }
+    
+    .security-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .security-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    
+    .security-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      transition: var(--transition);
+    }
+    
+    .security-card:hover {
+      border-color: var(--accent-primary);
+      transform: translateY(-2px);
+    }
+    
+    .security-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+    
+    .security-card p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+    
+    .security-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+    
+    .security-status.secured {
+      border-color: var(--success);
+      background: rgba(26, 215, 96, 0.1);
+    }
+    
+    .security-status.danger {
+      border-color: var(--danger);
+      background: rgba(255, 94, 102, 0.1);
+    }
+    
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+    
+    .status-indicator.danger {
+      background: var(--danger);
+    }
+    
+    /* Biometric Scanner Animation */
+    .biometric-scanner {
+      width: 120px;
+      height: 120px;
+      border: 3px solid var(--accent-primary);
+      border-radius: 50%;
+      margin: 20px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      color: var(--accent-primary);
+      animation: scan 2s infinite;
+    }
+    
+    @keyframes scan {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(110, 168, 254, 0.7); }
+      50% { box-shadow: 0 0 0 20px rgba(110, 168, 254, 0); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      .controls {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .modal-content {
+        width: 95%;
+        margin: 10px;
+      }
+      
+      .settings-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .memory-controls {
+        flex-direction: column;
+      }
+      
+      .memory-controls .btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .goal-item {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      
+      .goal-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+      
+      .pattern-grid {
+        grid-template-columns: repeat(3, 50px);
+      }
+      
+      .pattern-dot {
+        width: 50px;
+        height: 50px;
+      }
+      
+      .security-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <i class="fas fa-robot"></i> JARVIS v1.0
+      </div>
+      <div class="controls">
+        <div class="control-group">
+          <button id="nsfw-toggle" class="btn" title="NSFW Filter" aria-pressed="false">
+            <i class="fas fa-shield-alt"></i> NSFW
+          </button>
+          <button id="incognito-toggle" class="btn" title="Incognito Mode" aria-pressed="false">
+            <i class="fas fa-user-secret"></i> Incognito
+          </button>
+          <button id="pause-toggle" class="btn" title="Pause Assistant" aria-pressed="false">
+            <i class="fas fa-pause"></i> Pause
+          </button>
+        </div>
+        <div class="control-group">
+          <button id="voice-btn" class="btn" title="Start Voice Input">
+            <i class="fas fa-microphone"></i>
+          </button>
+          <button id="settings-btn" class="btn" title="Settings">
+            <i class="fas fa-cog"></i>
+          </button>
+          <button id="panic-btn" class="btn danger" title="Emergency Lockdown">
+            <i class="fas fa-exclamation-triangle"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="chat-container">
+        <div class="chat-header">
+          <div class="chat-title">
+            <i class="fas fa-comments"></i> Chat with JARVIS
+          </div>
+          <div class="chat-status">
+            <div class="status-dot"></div>
+            Online & Ready
+          </div>
+        </div>
+        <div id="chat-messages" class="chat-messages">
+          <div class="message assistant-message">
+            <div class="avatar">J</div>
+            <div class="message-content">
+              <p>Hello! I'm Jarvis, your personal AI assistant. I'm here to learn, adapt, and grow with you. How can I help you today?</p>
+              <time class="message-time">12:00 PM</time>
+            </div>
+          </div>
+        </div>
+        <div class="chat-input">
+          <form id="chat-form" class="input-form">
+            <textarea id="message-input" class="message-input" placeholder="Type your message..." rows="1"></textarea>
+            <button type="submit" class="send-btn">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fas fa-cog"></i> Settings & Features
+          </div>
+          <button id="close-settings" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- Security Section -->
+          <section class="security-section">
+            <h2 class="security-title">
+              <i class="fas fa-shield-alt"></i>
+              Security Features
+            </h2>
+            <div class="security-status secured">
+              <span class="status-indicator"></span>
+              <span>All security features active</span>
+            </div>
+            <div class="security-grid">
+              <div class="security-card">
+                <h3><i class="fas fa-lock"></i> Emergency Lockdown</h3>
+                <p>Instantly lock the system with the panic button or triple device shake.</p>
+                <button class="btn test-lockdown-btn">Test Lockdown</button>
+              </div>
+              <div class="security-card">
+                <h3><i class="fas fa-key"></i> Multi-Factor Authentication</h3>
+                <p>Choose from password, PIN, pattern, or biometric unlock methods.</p>
+                <button class="btn configure-auth-btn">Configure</button>
+              </div>
+              <div class="security-card">
+                <h3><i class="fas fa-microphone"></i> Voice Verification</h3>
+                <p>Advanced voice recognition for secure access to protected features.</p>
+                <button class="btn test-voice-btn">Test Voice</button>
+              </div>
+              <div class="security-card">
+                <h3><i class="fas fa-download"></i> Protected Downloads</h3>
+                <p>Secure file downloads with encryption and voice verification.</p>
+                <button class="btn test-download-btn">Test Download</button>
+              </div>
+            </div>
+            <p style="margin-top: 16px; font-size: 14px; color: var(--text-secondary);">
+              These features help protect your data if your device is lost or stolen.
+            </p>
+          </section>
+          
+          <!-- Theme Toggle -->
+          <div class="theme-toggle">
+            <span class="theme-toggle-label">
+              <i class="fas fa-moon"></i> Theme:
+            </span>
+            <label class="switch">
+              <input type="checkbox" id="theme-toggle-checkbox">
+              <span class="slider"></span>
+            </label>
+          </div>
+          
+          <!-- Persona Selector -->
+          <div style="margin-bottom: 24px;">
+            <label for="persona-select" style="display: block; margin-bottom: 8px; font-weight: 600;">Persona Mode:</label>
+            <select id="persona-select" class="persona-selector">
+              <option value="default">Default</option>
+              <option value="serious">Serious</option>
+              <option value="chill">Chill</option>
+              <option value="playful">Playful</option>
+              <option value="professional">Professional</option>
+            </select>
+          </div>
+          
+          <!-- Audio Output Selection -->
+          <div style="margin-bottom: 24px;">
+            <label for="audio-output-select" style="display: block; margin-bottom: 8px; font-weight: 600;">Audio Output:</label>
+            <select id="audio-output-select" class="persona-selector">
+              <option value="default">Default Device</option>
+              <option value="headphones">Headphones</option>
+              <option value="speakers">Speakers</option>
+            </select>
+          </div>
+          
+          <!-- Panic Unlock Settings -->
+          <div style="margin-bottom: 24px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600;">Panic Unlock Method:</label>
+            <select id="unlock-method-select" class="persona-selector">
+              <option value="password">Password</option>
+              <option value="pin">PIN</option>
+              <option value="pattern">Pattern</option>
+              <option value="biometric">Biometric</option>
+            </select>
+            <div id="unlock-setup" style="margin-top: 12px;"></div>
+          </div>
+          
+          <!-- Quick Memory Actions -->
+          <div style="margin-bottom: 24px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600;">Quick Actions:</label>
+            <div class="memory-controls">
+              <button id="settings-export-memory-btn" class="btn success">
+                <i class="fas fa-download"></i> Export Memory
+              </button>
+              <button id="settings-clear-memory-btn" class="btn danger">
+                <i class="fas fa-trash"></i> Clear Memory
+              </button>
+            </div>
+          </div>
+          
+          <div class="settings-grid">
+            <button data-target="memory-modal" class="feature-btn">
+              <i class="fas fa-brain"></i>
+              <div class="title">Memory Management</div>
+              <div class="desc">View, clear, and export your conversation memory and data</div>
+            </button>
+            <button data-target="analytics-modal" class="feature-btn">
+              <i class="fas fa-chart-bar"></i>
+              <div class="title">Analytics Dashboard</div>
+              <div class="desc">Your conversation analytics will appear here. Track message trends, mood patterns, and engagement metrics.</div>
+            </button>
+            <button data-target="search-modal" class="feature-btn">
+              <i class="fas fa-search"></i>
+              <div class="title">Search History</div>
+              <div class="desc">Search results will appear here.</div>
+            </button>
+            <button data-target="context-modal" class="feature-btn">
+              <i class="fas fa-project-diagram"></i>
+              <div class="title">Context Linking</div>
+              <div class="desc">View connections between different parts of your conversations.</div>
+            </button>
+            <button data-target="habits-modal" class="feature-btn">
+              <i class="fas fa-dna"></i>
+              <div class="title">Habit Genome</div>
+              <div class="desc">Analyze your conversation patterns and habits over time.</div>
+            </button>
+            <button data-target="timeline-modal" class="feature-btn">
+              <i class="fas fa-history"></i>
+              <div class="title">Behavior Timeline</div>
+              <div class="desc">Review your conversation history in a timeline view.</div>
+            </button>
+            <button data-target="mood-modal" class="feature-btn">
+              <i class="fas fa-smile"></i>
+              <div class="title">Mood Mirror</div>
+              <div class="desc">Track your emotional patterns based on conversation content.</div>
+            </button>
+            <button data-target="insights-modal" class="feature-btn">
+              <i class="fas fa-lightbulb"></i>
+              <div class="title">Weekly Insights</div>
+              <div class="desc">Review insights and patterns from your weekly conversations.</div>
+            </button>
+            <button data-target="goals-modal" class="feature-btn">
+              <i class="fas fa-bullseye"></i>
+              <div class="title">Goals Management</div>
+              <div class="desc">Manage your goals and track progress.</div>
+            </button>
+            <button data-target="reflection-modal" class="feature-btn">
+              <i class="fas fa-calendar-week"></i>
+              <div class="title">Weekly Reflection</div>
+              <div class="desc">Review your insights and regrets from this week.</div>
+            </button>
+            <button data-target="lan-modal" class="feature-btn">
+              <i class="fas fa-network-wired"></i>
+              <div class="title">LAN Sync</div>
+              <div class="desc">Sync your data across devices on your local network.</div>
+            </button>
+            <button id="whisperer-feature-btn" class="feature-btn">
+              <i class="fas fa-ear-listen"></i>
+              <div class="title">Meeting Whisperer</div>
+              <div class="desc">Get discreet suggestions during meetings based on ambient audio analysis.</div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Memory Management Modal -->
+    <div id="memory-modal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fas fa-brain"></i> Memory Management
+          </div>
+          <button data-close="memory-modal" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="memory-stats">
+            <div class="stat-item">
+              <span>Total Messages:</span>
+              <span id="total-messages">0</span>
+            </div>
+            <div class="stat-item">
+              <span>Memory Size:</span>
+              <span id="memory-size">0 KB</span>
+            </div>
+            <div class="stat-item">
+              <span>Last Updated:</span>
+              <span id="last-updated">Never</span>
+            </div>
+            <div class="stat-item">
+              <span>Storage Used:</span>
+              <span id="storage-used">0%</span>
+            </div>
+          </div>
+          <div class="memory-controls">
+            <button id="export-memory-btn" class="btn success">
+              <i class="fas fa-download"></i> Export Memory
+            </button>
+            <button id="import-memory-btn" class="btn">
+              <i class="fas fa-upload"></i> Import Memory
+            </button>
+            <button id="clear-memory-btn" class="btn danger">
+              <i class="fas fa-trash"></i> Clear All Memory
+            </button>
+            <button id="optimize-memory-btn" class="btn">
+              <i class="fas fa-magic"></i> Optimize Storage
+            </button>
+          </div>
+          <input type="file" id="import-file" style="display: none;" accept=".json">
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics Modal -->
+    <div id="analytics-modal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fas fa-chart-bar"></i> Analytics Dashboard
+          </div>
+          <button data-close="analytics-modal" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="memory-stats">
+            <div class="stat-item">
+              <span>Messages:</span>
+              <span id="analytics-messages">0</span>
+            </div>
+            <div class="stat-item">
+              <span>Insights:</span>
+              <span id="analytics-insights">0</span>
+            </div>
+            <div class="stat-item">
+              <span>Current Mood:</span>
+              <span id="analytics-mood">Neutral</span>
+            </div>
+            <div class="stat-item">
+              <span>Active Since:</span>
+              <span id="analytics-active-since">Today</span>
+            </div>
+          </div>
+          <div class="chart-container">
+            <div id="message-trend-chart" class="chart-placeholder">
+              Message trends will appear here as you chat more.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Modal -->
+    <div id="search-modal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fas fa-search"></i> Search History
+          </div>
+          <button data-close="search-modal" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <input type="text" id="search-input" placeholder="Search your conversation history..." style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-primary); color:var(--text-primary); margin-bottom: 16px;">
+          <div id="search-results" class="chart-container">
+            <div class="chart-placeholder">
+              Search results will appear here. Try searching for specific words or topics.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Context Linking Modal -->
+    <div id="context-modal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fas fa-project-diagram"></i> Context Linking
+            </div>
+          <button data-close="context-modal" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div id="context-visualization" class="chart-container">
+            <div class="chart-placeholder">
+              Context relationships visualization will appear here as you have more conversations.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Habits Modal -->
+    <div id="habits-modal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fas fa-dna"></i> Habit Genome
+          </div>
+          <button data-close="habits-modal" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="memory-stats">
+            <div class="stat-item">
+              <span>Most Active:</span>
+              <span id="most-active-time">Loading...</span>
+            </div>
+            <div class="stat-item">
+              <span>Favorite Topics:</span>
+              <span id="favorite-topics">Loading...</span>
+            </div>
+            <div class="stat-item">
+              <span>Avg. Message Length:</span>
+              <span id="avg-message-length">0 characters</span>
+            </div>
+          </div>
+          <div class="chart-container">
+            <div id="habits-chart" class="chart-placeholder">
+              Habit patterns will be analyzed and displayed here.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline Modal -->
+    <div id="timeline-modal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fas fa-history"></i> Behavior Timeline
+          </div>
+          <button data-close="timeline-modal" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div id="timeline-view" class="chart-container">
+            <div class="chart-placeholder">
+              Your conversation timeline will appear here. Have more conversations to see patterns over time.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mood Modal -->
+    <div id="mood-modal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fas fa-smile"></i> Mood Mirror
+          </div>
+          <button data-close="mood-modal" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="memory-stats">
+            <div class="stat-item">
+              <span>Current Mood:</span>
+              <span id="current-mood">Analyzing...</span>
+            </div>
+            <div class="stat-item">
+              <span>Mood Trend:</span>
+              <span id="mood-trend">Stable</span>
+            </div>
+            <div class="stat-item">
+              <span>Dominant Emotion:</span>
+              <span id="dominant-emotion">Neutral</span>
+            </div>
+          </div>
+          <div class="chart-container">
+            <div id="mood-chart" class="chart-placeholder">
+              Emotional patterns will be tracked and displayed here as you continue chatting.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Insights Modal -->
+    <div id="insights-modal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fas fa-lightbulb"></i> Weekly Insights
+          </div>
+          <button data-close="insights-modal" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div id="weekly-insights" class="chart-container">
+            <div class="chart-placeholder">
+              Weekly conversation insights will be generated here. Come back after a week of conversations to see patterns and suggestions.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Goals Modal -->
+    <div id="goals-modal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fas fa-bullseye"></i> Goals Management
+          </div>
+          <button data-close="goals-modal" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <h3>Active Goals</h3>
+          <div id="active-goals-list">
+            <!-- Active goals will be populated here -->
+          </div>
+          
+          <h3 style="margin-top: 24px;">Suggested Goals</h3>
+          <div id="suggested-goals-list">
+            <!-- Suggested goals will be populated here -->
+            <div class="goal-item">
+              <div>
+                <strong>Meeting Notes</strong>
+                <div>Suggested by Meeting Whisperer</div>
+              </div>
+              <div class="goal-actions">
+                <button class="btn success" onclick="memoryManager.addGoal('Meeting Notes'); memoryManager.updateGoalsUI();">
+                  <i class="fas fa-check"></i> Accept
+                </button>
+                <button class="btn danger" onclick="memoryManager.ignoreGoal('Meeting Notes'); memoryManager.updateGoalsUI();">
+                  <i class="fas fa-times"></i> Ignore
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reflection Modal -->
+    <div id="reflection-modal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fas fa-calendar-week"></i> Weekly Reflection
+          </div>
+          <button data-close="reflection-modal" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="reflection-section">
+            <h3 class="reflection-title">Insights This Week</h3>
+            <div id="insights-list">
+              <!-- Insights will be populated here -->
+            </div>
+          </div>
+          
+          <div class="reflection-section">
+            <h3 class="reflection-title">Regrets This Week</h3>
+            <div id="regrets-list">
+              <!-- Regrets will be populated here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LAN Sync Modal -->
+    <div id="lan-modal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fas fa-network-wired"></i> LAN Sync
+          </div>
+          <button data-close="lan-modal" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div style="margin-bottom: 20px;">
+            <p>Sync your JARVIS data across devices on your local network.</p>
+            <div class="memory-stats">
+              <div class="stat-item">
+                <span>Sync Status:</span>
+                <span id="sync-status">Inactive</span>
+              </div>
+              <div class="stat-item">
+                <span>Connected Devices:</span>
+                <span id="connected-devices">0</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="memory-controls">
+            <button id="start-sync-btn" class="btn success">
+              <i class="fas fa-wifi"></i> Start Sync
+            </button>
+            <button id="stop-sync-btn" class="btn danger">
+              <i class="fas fa-ban"></i> Stop Sync
+            </button>
+            <button id="export-lan-btn" class="btn">
+              <i class="fas fa-download"></i> Export for LAN
+            </button>
+            <button id="import-lan-btn" class="btn">
+              <i class="fas fa-upload"></i> Import from LAN
+            </button>
+          </div>
+          
+          <div id="lan-status" style="margin-top: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px;">
+            <p>LAN sync ready. Start sync to connect with other devices.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Meeting Whisperer Modal -->
+    <div id="whisperer-modal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fas fa-ear-listen"></i> Meeting Whisperer
+          </div>
+          <button data-close="whisperer-modal" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div style="margin-bottom: 20px;">
+            <p>The Meeting Whisperer analyzes ambient audio during meetings to provide discreet suggestions and reminders.</p>
+            <div class="memory-stats">
+              <div class="stat-item">
+                <span>Status:</span>
+                <span id="whisperer-status">Inactive</span>
+              </div>
+              <div class="stat-item">
+                <span>Microphone Access:</span>
+                <span id="mic-access">Not granted</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="memory-controls">
+            <button id="start-whisperer-btn" class="btn success">
+              <i class="fas fa-play"></i> Start Whisperer
+            </button>
+            <button id="stop-whisperer-btn" class="btn danger">
+              <i class="fas fa-stop"></i> Stop Whisperer
+            </button>
+          </div>
+          
+          <div style="margin-top: 20px;">
+            <h3>Recent Suggestions</h3>
+            <div id="whisperer-suggestions" class="chart-container">
+              <div class="chart-placeholder">
+                Suggestions will appear here during meetings.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lock Screen (initially hidden) -->
+  <div id="lock-screen" class="lock-screen" style="display: none;">
+    <h2><i class="fas fa-lock"></i> System Locked</h2>
+    <p>Emergency lockdown activated. Unlock using your chosen method:</p>
+    
+    <div id="unlock-methods">
+      <!-- Password Method -->
+      <div id="password-method" class="unlock-method" style="display: none;">
+        <input type="password" id="panic-password-input" class="lock-screen-input" placeholder="Enter password">
+        <button id="unlock-password-btn" class="btn success" style="margin-top: 12px;">
+          <i class="fas fa-unlock"></i> Unlock
+        </button>
+      </div>
+
+      <!-- PIN Method -->
+      <div id="pin-method" class="unlock-method" style="display: none;">
+        <input type="number" id="panic-pin-input" class="lock-screen-input" placeholder="Enter PIN" maxlength="6">
+        <button id="unlock-pin-btn" class="btn success" style="margin-top: 12px;">
+          <i class="fas fa-unlock"></i> Unlock
+        </button>
+      </div>
+
+      <!-- Pattern Method -->
+      <div id="pattern-method" class="unlock-method" style="display: none;">
+        <div class="pattern-grid">
+          <div class="pattern-dot" data-index="0"></div>
+          <div class="pattern-dot" data-index="1"></div>
+          <div class="pattern-dot" data-index="2"></div>
+          <div class="pattern-dot" data-index="3"></div>
+          <div class="pattern-dot" data-index="4"></div>
+          <div class="pattern-dot" data-index="5"></div>
+          <div class="pattern-dot" data-index="6"></div>
+          <div class="pattern-dot" data-index="7"></div>
+          <div class="pattern-dot" data-index="8"></div>
+        </div>
+        <button id="unlock-pattern-btn" class="btn success" style="margin-top: 12px;">
+          <i class="fas fa-unlock"></i> Unlock
+        </button>
+      </div>
+
+      <!-- Biometric Method -->
+      <div id="biometric-method" class="unlock-method" style="display: none;">
+        <div class="biometric-scanner">
+          <i class="fas fa-fingerprint"></i>
+        </div>
+        <p>Place your finger on the scanner or look at the camera</p>
+        <button id="unlock-biometric-btn" class="btn success" style="margin-top: 12px;">
+          <i class="fas fa-unlock"></i> Simulate Unlock
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="import-file" style="display: none;" accept=".json">
+
+  <script>
+    // ===== SECURITY MANAGER =====
+    class SecurityManager {
+      constructor() {
+        this.isLocked = false;
+        this.unlockMethod = 'password';
+        this.credentials = {
+          password: 'jarvis123',
+          pin: '1234',
+          pattern: [0, 1, 2, 5, 8],
+          biometric: true
+        };
+        this.voiceProfile = null;
+        this.setupVoiceRecognition();
+      }
+
+      async deriveKey(password, salt = new TextEncoder().encode('jarvis-salt')) {
+        const keyMaterial = await crypto.subtle.importKey(
+          'raw',
+          new TextEncoder().encode(password),
+          { name: 'PBKDF2' },
+          false,
+          ['deriveBits', 'deriveKey']
+        );
+
+        return crypto.subtle.deriveKey(
+          {
+            name: 'PBKDF2',
+            salt: salt,
+            iterations: 100000,
+            hash: 'SHA-256',
+          },
+          keyMaterial,
+          { name: 'AES-GCM', length: 256 },
+          true,
+          ['encrypt', 'decrypt']
+        );
+      }
+
+      async encrypt(key, data) {
+        const enc = new TextEncoder();
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const cipher = await crypto.subtle.encrypt(
+          { name: 'AES-GCM', iv: iv },
+          key,
+          enc.encode(data)
+        );
+
+        return {
+          iv: Array.from(iv),
+          data: Array.from(new Uint8Array(cipher))
+        };
+      }
+
+      async decrypt(key, encryptedData) {
+        const dec = new TextDecoder();
+        const iv = new Uint8Array(encryptedData.iv);
+        const data = new Uint8Array(encryptedData.data);
+        
+        const decrypted = await crypto.subtle.decrypt(
+          { name: 'AES-GCM', iv: iv },
+          key,
+          data
+        );
+
+        return dec.decode(decrypted);
+      }
+
+      setupVoiceRecognition() {
+        if ('webkitSpeechRecognition' in window) {
+          this.recognition = new webkitSpeechRecognition();
+          this.recognition.continuous = false;
+          this.recognition.interimResults = false;
+          this.recognition.lang = 'en-US';
+        }
+      }
+
+      lock() {
+        this.isLocked = true;
+        document.getElementById('lock-screen').style.display = 'flex';
+        document.querySelector('.app-container').style.filter = 'blur(5px)';
+        this.setupUnlockMethod(this.unlockMethod);
+        
+        // Stop any ongoing speech
+        if (window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+        }
+        
+        // Disable all buttons except unlock
+        document.querySelectorAll('.app-container button').forEach(btn => {
+          btn.disabled = true;
+        });
+      }
+
+      unlock() {
+        this.isLocked = false;
+        document.getElementById('lock-screen').style.display = 'none';
+        document.querySelector('.app-container').style.filter = 'none';
+        
+        // Re-enable buttons
+        document.querySelectorAll('.app-container button').forEach(btn => {
+          btn.disabled = false;
+        });
+        
+        showNotification('System unlocked successfully', 'success');
+        return true;
+      }
+
+      setupUnlockMethod(method) {
+        this.unlockMethod = method;
+        
+        // Hide all methods
+        document.querySelectorAll('.unlock-method').forEach(el => {
+          el.style.display = 'none';
+        });
+        
+        // Show selected method
+        document.getElementById(`${method}-method`).style.display = 'block';
+        
+        // Setup method-specific handlers
+        this.setupMethodHandlers(method);
+      }
+
+      setupMethodHandlers(method) {
+        switch (method) {
+          case 'password':
+            this.setupPasswordMethod();
+            break;
+          case 'pin':
+            this.setupPinMethod();
+            break;
+          case 'pattern':
+            this.setupPatternMethod();
+            break;
+          case 'biometric':
+            this.setupBiometricMethod();
+            break;
+        }
+      }
+
+      setupPasswordMethod() {
+        const input = document.getElementById('panic-password-input');
+        const btn = document.getElementById('unlock-password-btn');
+        
+        if (!input || !btn) return;
+        
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            btn.click();
+          }
+        });
+        
+        btn.addEventListener('click', () => {
+          const val = input.value.trim();
+          if (val === this.credentials.password) {
+            this.unlock();
+            input.value = '';
+          } else {
+            showNotification('Invalid password', 'danger');
+            input.value = '';
+            input.focus();
+          }
+        });
+      }
+
+      setupPinMethod() {
+        const input = document.getElementById('panic-pin-input');
+        const btn = document.getElementById('unlock-pin-btn');
+        
+        if (!input || !btn) return;
+        
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            btn.click();
+          }
+        });
+        
+        btn.addEventListener('click', () => {
+          const val = input.value.trim();
+          if (val === this.credentials.pin) {
+            this.unlock();
+            input.value = '';
+          } else {
+            showNotification('Invalid PIN', 'danger');
+            input.value = '';
+            input.focus();
+            }
+        });
+      }
+
+      setupPatternMethod() {
+        const dots = document.querySelectorAll('.pattern-dot');
+        const btn = document.getElementById('unlock-pattern-btn');
+        let inputPattern = [];
+        
+        if (!dots || !btn) return;
+        
+        dots.forEach((dot, i) => {
+          dot.addEventListener('click', () => {
+            dot.classList.add('active');
+            inputPattern.push(i);
+            
+            if (inputPattern.length === this.credentials.pattern.length) {
+              setTimeout(() => {
+                if (JSON.stringify(inputPattern) === JSON.stringify(this.credentials.pattern)) {
+                  this.unlock();
+                } else {
+                  showNotification('Invalid pattern', 'danger');
+                }
+                // Reset pattern
+                dots.forEach(d => d.classList.remove('active'));
+                inputPattern = [];
+              }, 500);
+            }
+          });
+        });
+        
+        btn.addEventListener('click', () => {
+          dots.forEach(d => d.classList.remove('active'));
+          inputPattern = [];
+        });
+      }
+
+      setupBiometricMethod() {
+        const btn = document.getElementById('unlock-biometric-btn');
+        
+        if (!btn) return;
+        
+        btn.addEventListener('click', () => {
+          // Simulate biometric authentication
+          if (confirm("Simulate successful biometric authentication?")) {
+            this.unlock();
+          } else {
+            showNotification('Biometric authentication failed', 'danger');
+          }
+        });
+      }
+    }
+
+    // ===== DATA STORAGE AND MANAGEMENT =====
+    class MemoryManager {
+      constructor() {
+        this.storageKey = 'jarvis_memory';
+        this.data = this.loadData();
+        this.initializeData();
+        this.securityManager = new SecurityManager();
+      }
+
+      initializeData() {
+        if (!this.data.messages) this.data.messages = [];
+        if (!this.data.analytics) this.data.analytics = {
+          totalMessages: 0,
+          insights: 0,
+          mood: 'neutral',
+          activeSince: new Date().toISOString(),
+          messagesByHour: new Array(24).fill(0),
+          topicFrequency: {},
+          moodHistory: []
+        };
+        if (!this.data.settings) this.data.settings = {
+          nsfw: false,
+          incognito: false,
+          paused: false,
+          persona: 'default',
+          audioOutput: 'default',
+          locked: false,
+          unlockMethod: 'password',
+          panicPassword: 'jarvis123',
+          panicPin: '',
+          panicPattern: [],
+          theme: 'dark',
+          syncEnabled: false,
+          whispererEnabled: false
+        };
+        if (!this.data.goals) this.data.goals = {
+          active: [],
+          shadow: []
+        };
+        if (!this.data.autoFlags) this.data.autoFlags = {
+          insights: [],
+          regrets: []
+        };
+        this.saveData();
+      }
+
+      loadData() {
+        try {
+          const stored = localStorage.getItem(this.storageKey);
+          return stored ? JSON.parse(stored) : {};
+        } catch (error) {
+          console.error('Error loading data:', error);
+          return {};
+        }
+      }
+
+      saveData() {
+        try {
+          localStorage.setItem(this.storageKey, JSON.stringify(this.data));
+          this.updateMemoryStats();
+          
+          // Sync to IndexedDB if available
+          if (window.JarvisIDB) {
+            JarvisIDB.put('memory_backup', this.data).catch(err => 
+              console.warn('[Jarvis] IDB backup failed', err)
+            );
+          }
+        } catch (error) {
+          console.error('Error saving data:', error);
+        }
+      }
+
+      addMessage(message, sender) {
+        const messageData = {
+          id: Date.now(),
+          text: message,
+          sender: sender,
+          timestamp: new Date().toISOString(),
+          hour: new Date().getHours(),
+          autoFlag: this.analyzeMessageFlag(message)
+        };
+
+        this.data.messages.push(messageData);
+        this.data.analytics.totalMessages++;
+        this.data.analytics.messagesByHour[messageData.hour]++;
+        
+        // Add to auto flags if applicable
+        if (messageData.autoFlag === 'insight') {
+          this.data.autoFlags.insights.push(messageData);
+        } else if (messageData.autoFlag === 'regret') {
+          this.data.autoFlags.regrets.push(messageData);
+        }
+        
+        // Simple mood analysis
+        this.analyzeMood(message);
+        
+        // Extract topics (simple keyword extraction)
+        this.extractTopics(message);
+        
+        // Scan for potential goals
+        this.scanForGoals(message);
+        
+        this.saveData();
+        this.updateAnalytics();
+        
+        // Broadcast new message if sync is active
+        if (this.data.settings.syncEnabled && window.JarvisSync) {
+          JarvisSync.broadcastMessage(messageData);
+        }
+      }
+
+      analyzeMessageFlag(message) {
+        const text = message.toLowerCase();
+        let score = 0;
+
+        // Simple sentiment analysis
+        const positive = ['good', 'great', 'happy', 'awesome', 'excellent', 'wonderful', 'amazing', 'love', 'like', 'enjoy'];
+        const negative = ['bad', 'terrible', 'sad', 'awful', 'horrible', 'hate', 'dislike', 'angry', 'frustrated', 'annoyed'];
+
+        positive.forEach(word => {
+          if (text.includes(word)) score += 1;
+        });
+
+        negative.forEach(word => {
+          if (text.includes(word)) score -= 1;
+        });
+
+        // Check for insight keywords
+        const insightKeywords = ['aha', 'finally understood', 'makes sense', 'i see', 'now i get it', 'eureka', 'lightbulb'];
+        const hasInsight = insightKeywords.some(keyword => text.includes(keyword));
+
+        if (hasInsight) {
+          return 'insight';
+        } else if (score < -0.5) {
+          return 'regret';
+        } else {
+          return null;
+        }
+      }
+
+      analyzeMood(message) {
+        const text = message.toLowerCase();
+        let mood = 'neutral';
+        let score = 0;
+
+        // Simple sentiment analysis
+        const positive = ['good', 'great', 'happy', 'awesome', 'excellent', 'wonderful', 'amazing', 'love', 'like', 'enjoy'];
+        const negative = ['bad', 'terrible', 'sad', 'awful', 'horrible', 'hate', 'dislike', 'angry', 'frustrated', 'annoyed'];
+
+        positive.forEach(word => {
+          if (text.includes(word)) score += 1;
+        });
+
+        negative.forEach(word => {
+          if (text.includes(word)) score -= 1;
+        });
+
+        if (score > 0) mood = 'positive';
+        else if (score < 0) mood = 'negative';
+
+        this.data.analytics.mood = mood;
+        this.data.analytics.moodHistory.push({
+          timestamp: new Date().toISOString(),
+          mood: mood,
+          score: score
+        });
+
+        // Keep only last 100 mood entries
+        if (this.data.analytics.moodHistory.length > 100) {
+          this.data.analytics.moodHistory = this.data.analytics.moodHistory.slice(-100);
+        }
+      }
+
+      extractTopics(message) {
+        const words = message.toLowerCase().match(/\b\w{4,}\b/g) || [];
+        words.forEach(word => {
+          if (!this.data.analytics.topicFrequency[word]) {
+            this.data.analytics.topicFrequency[word] = 0;
+          }
+          this.data.analytics.topicFrequency[word]++;
+        });
+      }
+
+      scanForGoals(message) {
+        const text = message.toLowerCase();
+        const goalKeywords = ['study', 'exercise', 'code', 'workout', 'read', 'learn', 'practice', 'train'];
+        
+        goalKeywords.forEach(keyword => {
+          if (text.includes(keyword)) {
+            // Check if already in shadow goals
+            const existingIndex = this.data.goals.shadow.findIndex(g => g.keyword === keyword);
+            
+            if (existingIndex === -1) {
+              // Add new shadow goal
+              this.data.goals.shadow.push({
+                keyword: keyword,
+                count: 1,
+                firstMentioned: new Date().toISOString(),
+                lastMentioned: new Date().toISOString()
+              });
+            } else {
+              // Update existing shadow goal
+              this.data.goals.shadow[existingIndex].count++;
+              this.data.goals.shadow[existingIndex].lastMentioned = new Date().toISOString();
+            }
+          }
+        });
+        
+        // Filter out goals mentioned less than 3 times in the last week
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        
+        this.data.goals.shadow = this.data.goals.shadow.filter(goal => {
+          const lastMentioned = new Date(goal.lastMentioned);
+          return goal.count >= 3 && lastMentioned >= oneWeekAgo;
+        });
+        
+        this.saveData();
+      }
+
+      addGoal(keyword) {
+        // Check if already an active goal
+        const isActive = this.data.goals.active.some(g => g.keyword === keyword);
+        if (!isActive) {
+          this.data.goals.active.push({
+            keyword: keyword,
+            createdAt: new Date().toISOString(),
+            progress: 0
+          });
+          
+          // Remove from shadow goals
+          this.data.goals.shadow = this.data.goals.shadow.filter(g => g.keyword !== keyword);
+          
+          this.saveData();
+          return true;
+        }
+        return false;
+      }
+
+      ignoreGoal(keyword) {
+        // Remove from shadow goals
+        this.data.goals.shadow = this.data.goals.shadow.filter(g => g.keyword !== keyword);
+        this.saveData();
+      }
+
+      searchMessages(query) {
+        const searchTerm = query.toLowerCase();
+        return this.data.messages.filter(message => 
+          message.text.toLowerCase().includes(searchTerm)
+        );
+      }
+
+      clearMemory() {
+        if (confirm('Are you sure you want to clear all memory? This action cannot be undone.')) {
+          this.data = {};
+          this.initializeData();
+          this.saveData();
+          this.updateAllDashboards();
+          showNotification('Memory cleared successfully!', 'success');
+          
+          // Clear chat messages from UI
+          const chatMessages = document.getElementById('chat-messages');
+          chatMessages.innerHTML = `
+            <div class="message assistant-message">
+              <div class="avatar">J</div>
+              <div class="message-content">
+                <p>Hello! I'm Jarvis, your personal AI assistant. I'm here to learn, adapt, and grow with you. How can I help you today?</p>
+                <time class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      exportMemory() {
+        const exportData = {
+          ...this.data,
+          exportDate: new Date().toISOString(),
+          version: '1.0'
+        };
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `jarvis-memory-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showNotification('Memory exported successfully!', 'success');
+      }
+
+      importMemory(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const importedData = JSON.parse(e.target.result);
+            
+            if (confirm('This will replace your current memory. Continue?')) {
+              this.data = importedData;
+              this.initializeData();
+              this.saveData();
+              this.updateAllDashboards();
+              showNotification('Memory imported successfully!', 'success');
+              location.reload(); // Refresh to show imported data
+            }
+          } catch (error) {
+            showNotification('Error importing memory file: ' + error.message, 'danger');
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      optimizeMemory() {
+        // Remove duplicate messages
+        const seen = new Set();
+        this.data.messages = this.data.messages.filter(msg => {
+          const key = `${msg.text}-${msg.sender}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
+        // Limit topic frequency entries to top 100
+        const topicEntries = Object.entries(this.data.analytics.topicFrequency)
+          .sort(([,a], [,b]) => b - a)
+          .slice(0, 100);
+        this.data.analytics.topicFrequency = Object.fromEntries(topicEntries);
+
+        this.saveData();
+        this.updateMemoryStats();
+        showNotification('Memory optimized successfully!', 'success');
+      }
+
+      updateMemoryStats() {
+        const stats = {
+          totalMessages: this.data.messages.length,
+          memorySize: Math.round(JSON.stringify(this.data).length / 1024),
+          lastUpdated: new Date().toLocaleString(),
+          storageUsed: Math.round((JSON.stringify(this.data).length / (5 * 1024 * 1024)) * 100) // Assuming 5MB limit
+        };
+
+        // Update memory modal stats
+        if (document.getElementById('total-messages')) {
+          document.getElementById('total-messages').textContent = stats.totalMessages;
+          document.getElementById('memory-size').textContent = `${stats.memorySize} KB`;
+          document.getElementById('last-updated').textContent = stats.lastUpdated;
+          document.getElementById('storage-used').textContent = `${stats.storageUsed}%`;
+        }
+      }
+
+      updateAnalytics() {
+        const analytics = this.data.analytics;
+        
+        // Update analytics modal
+        if (document.getElementById('analytics-messages')) {
+          document.getElementById('analytics-messages').textContent = analytics.totalMessages;
+          document.getElementById('analytics-insights').textContent = analytics.insights;
+          document.getElementById('analytics-mood').textContent = analytics.mood.charAt(0).toUpperCase() + analytics.mood.slice(1);
+          document.getElementById('analytics-active-since').textContent = new Date(analytics.activeSince).toLocaleDateString();
+        }
+
+        // Update mood modal
+        if (document.getElementById('current-mood')) {
+          document.getElementById('current-mood').textContent = analytics.mood.charAt(0).toUpperCase() + analytics.mood.slice(1);
+          
+          const recentMoods = analytics.moodHistory.slice(-10);
+          let trend = 'Stable';
+          if (recentMoods.length > 3) {
+            const avgRecent = recentMoods.slice(-3).reduce((sum, m) => sum + m.score, 0) / 3;
+            const avgOlder = recentMoods.slice(0, -3).reduce((sum, m) => sum + m.score, 0) / (recentMoods.length - 3);
+            if (avgRecent > avgOlder + 0.5) trend = 'Improving';
+            else if (avgRecent < avgOlder - 0.5) trend = 'Declining';
+          }
+          
+          document.getElementById('mood-trend').textContent = trend;
+          
+          // Find dominant emotion
+          const moodCounts = { positive: 0, negative: 0, neutral: 0 };
+          recentMoods.forEach(m => moodCounts[m.mood]++);
+          const dominant = Object.entries(moodCounts).sort(([,a], [,b]) => b - a)[0][0];
+          document.getElementById('dominant-emotion').textContent = dominant.charAt(0).toUpperCase() + dominant.slice(1);
+        }
+
+        // Update habits modal
+        if (document.getElementById('most-active-time')) {
+          const maxHour = analytics.messagesByHour.indexOf(Math.max(...analytics.messagesByHour));
+          const timeString = `${maxHour}:00 - ${maxHour + 1}:00`;
+          document.getElementById('most-active-time').textContent = timeString;
+
+          const topTopics = Object.entries(analytics.topicFrequency)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 3)
+            .map(([topic]) => topic)
+            .join(', ');
+          document.getElementById('favorite-topics').textContent = topTopics || 'Not enough data';
+
+          const avgLength = analytics.totalMessages > 0 
+            ? Math.round(this.data.messages.reduce((sum, msg) => sum + msg.text.length, 0) / analytics.totalMessages)
+            : 0;
+          document.getElementById('avg-message-length').textContent = `${avgLength} characters`;
+        }
+      }
+
+      updateGoalsUI() {
+        const activeGoalsList = document.getElementById('active-goals-list');
+        const suggestedGoalsList = document.getElementById('suggested-goals-list');
+        
+        if (activeGoalsList) {
+          if (this.data.goals.active.length === 0) {
+            activeGoalsList.innerHTML = '<p>No active goals yet.</p>';
+          } else {
+            activeGoalsList.innerHTML = this.data.goals.active.map(goal => `
+              <div class="goal-item">
+                <div>
+                  <strong>${goal.keyword}</strong>
+                  <div>Progress: ${goal.progress}%</div>
+                </div>
+                <div class="goal-actions">
+                  <button class="btn" onclick="memoryManager.updateGoalProgress('${goal.keyword}', 10)">
+                    <i class="fas fa-plus"></i> Add Progress
+                  </button>
+                  <button class="btn danger" onclick="memoryManager.removeGoal('${goal.keyword}')">
+                    <i class="fas fa-times"></i> Remove
+                  </button>
+                </div>
+              </div>
+            `).join('');
+          }
+        }
+        
+        if (suggestedGoalsList) {
+          if (this.data.goals.shadow.length === 0) {
+            suggestedGoalsList.innerHTML = '<p>No suggested goals at this time.</p>';
+          } else {
+            suggestedGoalsList.innerHTML = this.data.goals.shadow.map(goal => `
+              <div class="goal-item">
+                <div>
+                  <strong>${goal.keyword}</strong>
+                  <div>Mentioned ${goal.count} times</div>
+                </div>
+                <div class="goal-actions">
+                  <button class="btn success" onclick="memoryManager.addGoal('${goal.keyword}'); memoryManager.updateGoalsUI();">
+                    <i class="fas fa-check"></i> Accept
+                  </button>
+                  <button class="btn danger" onclick="memoryManager.ignoreGoal('${goal.keyword}'); memoryManager.updateGoalsUI();">
+                    <i class="fas fa-times"></i> Ignore
+                  </button>
+                </div>
+              </div>
+            `).join('');
+          }
+        }
+      }
+
+      updateReflectionUI() {
+        const insightsList = document.getElementById('insights-list');
+        const regretsList = document.getElementById('regrets-list');
+        
+        // Get insights and regrets from the last week
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        
+        const recentInsights = this.data.autoFlags.insights.filter(insight => 
+          new Date(insight.timestamp) >= oneWeekAgo
+        );
+        
+        const recentRegrets = this.data.autoFlags.regrets.filter(regret => 
+          new Date(regret.timestamp) >= oneWeekAgo
+        );
+        
+        if (insightsList) {
+          if (recentInsights.length === 0) {
+            insightsList.innerHTML = '<div class="reflection-item">No insights recorded this week.</div>';
+          } else {
+            insightsList.innerHTML = recentInsights.map(insight => `
+              <div class="reflection-item">
+                <div>${insight.text}</div>
+                <small>${new Date(insight.timestamp).toLocaleString()}</small>
+              </div>
+            `).join('');
+          }
+        }
+        
+        if (regretsList) {
+          if (recentRegrets.length === 0) {
+            regretsList.innerHTML = '<div class="reflection-item">No regrets recorded this week.</div>';
+          } else {
+            regretsList.innerHTML = recentRegrets.map(regret => `
+              <div class="reflection-item">
+                <div>${regret.text}</div>
+                <small>${new Date(regret.timestamp).toLocaleString()}</small>
+              </div>
+            `).join('');
+          }
+        }
+      }
+
+      updateGoalProgress(keyword, progress) {
+        const goalIndex = this.data.goals.active.findIndex(g => g.keyword === keyword);
+        if (goalIndex !== -1) {
+          this.data.goals.active[goalIndex].progress = Math.min(100, this.data.goals.active[goalIndex].progress + progress);
+          this.saveData();
+          this.updateGoalsUI();
+        }
+      }
+
+      removeGoal(keyword) {
+        this.data.goals.active = this.data.goals.active.filter(g => g.keyword !== keyword);
+        this.saveData();
+        this.updateGoalsUI();
+      }
+
+      updateAllDashboards() {
+        this.updateMemoryStats();
+        this.updateAnalytics();
+        this.updateGoalsUI();
+        this.updateReflectionUI();
+      }
+
+      performSearch(query) {
+        const results = this.searchMessages(query);
+        const resultsContainer = document.getElementById('search-results');
+        
+        if (results.length === 0) {
+          resultsContainer.innerHTML = '<div class="chart-placeholder">No results found for "' + query + '"</div>';
+          return;
+        }
+
+        const resultsHtml = results.map(msg => `
+          <div class="message" style="margin-bottom: 12px; padding: 12px; background: var(--bg-secondary); border-radius: 8px;">
+            <strong>${msg.sender}:</strong> ${msg.text}
+            <br><small style="color: var(--text-secondary);">${new Date(msg.timestamp).toLocaleString()}</small>
+          </div>
+        `).join('');
+
+        resultsContainer.innerHTML = `
+          <div style="margin-bottom: 16px; color: var(--text-secondary);">Found ${results.length} result(s) for "${query}":</div>
+          ${resultsHtml}
+        `;
+      }
+
+      // Panic functionality
+      triggerPanicMode() {
+        this.securityManager.lock();
+        this.data.settings.locked = true;
+        this.saveData();
+        
+        // Stop sync and whisperer if active
+        if (window.JarvisSync && this.data.settings.syncEnabled) {
+          JarvisSync.stop();
+        }
+        
+        if (window.MeetingWhisperer && MeetingWhisperer.active()) {
+          MeetingWhisperer.stop();
+        }
+      }
+
+      unlockSystem() {
+        return this.securityManager.unlock();
+      }
+
+      setupUnlockMethod(method) {
+        this.securityManager.setupUnlockMethod(method);
+      }
+
+      // Theme switching function
+      toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        this.data.settings.theme = newTheme;
+        this.saveData();
+      }
+    }
+
+    // Initialize memory manager
+    const memoryManager = new MemoryManager();
+
+    // ===== SECURITY FUNCTIONS =====
+    function requestVoiceChallenge() {
+      if (!('webkitSpeechRecognition' in window)) {
+        showNotification('Voice recognition not supported in this browser', 'warning');
+        return;
+      }
+
+      const recognition = new webkitSpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        showNotification('Listening... Please say "Hello Jarvis"', 'info');
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        console.log('Voice input received: ' + transcript);
+        
+        if (transcript.includes('hello jarvis') || transcript.includes('hello davis')) {
+          showNotification('Voice verification successful!', 'success');
+          return true;
+        } else {
+          showNotification('Voice verification failed. Please try again.', 'danger');
+          return false;
+        }
+      };
+
+      recognition.onerror = (event) => {
+        showNotification('Voice recognition error: ' + event.error, 'danger');
+      };
+
+      recognition.start();
+    }
+
+    function verifyVoice() {
+      return new Promise((resolve) => {
+        requestVoiceChallenge();
+        // Simulate verification result for demo
+        setTimeout(() => resolve(true), 2000);
+      });
+    }
+
+    async function protectedDownload(filename, content) {
+      showNotification('Initiating protected download...', 'info');
+      
+      const voiceVerified = await verifyVoice();
+      if (!voiceVerified) {
+        showNotification('Voice verification required for protected downloads', 'danger');
+        return;
+      }
+
+      // Create encrypted download
+      const key = await memoryManager.securityManager.deriveKey('download-key');
+      const encrypted = await memoryManager.securityManager.encrypt(key, content);
+      
+      const blob = new Blob([JSON.stringify(encrypted)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename + '.encrypted';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      showNotification('Protected file downloaded successfully', 'success');
+    }
+
+    // Notification System
+    function showNotification(message, type = 'info') {
+      // Check if notification system already exists
+      if (window.jarvisNotifications) {
+        window.jarvisNotifications(message, type);
+        return;
+      }
+      
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? 'var(--success)' : type === 'danger' ? 'var(--danger)' : type === 'warning' ? 'var(--warning)' : 'var(--accent-primary)'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 10px;
+        z-index: 10000;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: var(--shadow);
+        animation: slideIn 0.3s ease;
+        max-width: 300px;
+      `;
+      
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      // Add notification keyframes if not already added
+      if (!document.getElementById('notification-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notification-styles';
+        style.textContent = `
+          @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
+          @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+      
+      setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease forwards';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            document.body.removeChild(notification);
+          }
+        }, 300);
+      }, 3000);
+      
+      // Store reference for future use
+      window.jarvisNotifications = showNotification;
+    }
+
+    // ===== STAGE 4 FEATURES =====
+    
+    // Device Awareness
+    const Device = {
+      getDeviceType() {
+        const ua = navigator.userAgent || '';
+        if (/mobile|android|iphone|ipad|ipod/i.test(ua)) return 'mobile';
+        if (/Macintosh|Windows|Linux/.test(ua) && window.matchMedia('(pointer:fine)').matches) return 'laptop';
+        return 'unknown';
+      },
+      isScreenFocused() {
+        return document.visibilityState === 'visible';
+      }
+    };
+
+    // IndexedDB helper for robust local memory backup
+    const JarvisIDB = (function(){
+      const DB_NAME = 'jarvis_v1_0';
+      const DB_VERSION = 1;
+      let db;
+      
+      function open() {
+        return new Promise((resolve, reject) => {
+          if (db) return resolve(db);
+          if (!window.indexedDB) {
+            reject(new Error('IndexedDB not supported'));
+            return;
+          }
+          
+          const req = indexedDB.open(DB_NAME, DB_VERSION);
+          req.onupgradeneeded = (e) => {
+            const _db = e.target.result;
+            if (!_db.objectStoreNames.contains('memory')) {
+              _db.createObjectStore('memory');
+            }
+          };
+          req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+          req.onerror = (e) => reject(e.target.error);
+        });
+      }
+      
+      async function put(key, value) {
+        try {
+          const _db = await open();
+          return new Promise((resolve, reject) => {
+            const tx = _db.transaction('memory', 'readwrite');
+            tx.objectStore('memory').put(value, key);
+            tx.oncomplete = () => resolve();
+            tx.onerror = (e) => reject(e.target.error);
+          });
+        } catch (err) {
+          console.warn('[Jarvis] IDB put error', err);
+          throw err;
+        }
+      }
+      
+      async function get(key) {
+        try {
+          const _db = await open();
+          return new Promise((resolve, reject) => {
+            const tx = _db.transaction('memory', 'readonly');
+            const req = tx.objectStore('memory').get(key);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = (e) => reject(e.target.error);
+          });
+        } catch (err) {
+          console.warn('[Jarvis] IDB get error', err);
+          throw err;
+        }
+      }
+      
+      return { put, get };
+    })();
+
+    // Try to load from IDB backup on startup
+    JarvisIDB.get('memory_backup').then(backup => {
+      if (backup && Object.keys(backup).length > 0) {
+        if (confirm('A memory backup was found. Would you like to restore it?')) {
+          memoryManager.data = backup;
+          memoryManager.saveData();
+          memoryManager.updateAllDashboards();
+          console.log('[Jarvis] Memory restored from IDB backup');
+        }
+      }
+    }).catch(err => {
+      console.warn('[Jarvis] IDB backup load failed', err);
+    });
+
+    // LAN Sync / Cross-device sync
+    const JarvisSync = (function(){
+      let bc = null;
+      let running = false;
+      let peers = new Set();
+
+      function init() {
+        if ('BroadcastChannel' in window) {
+          try {
+            bc = new BroadcastChannel('jarvis-sync');
+            bc.onmessage = (e) => {
+              try {
+                handleIncoming(e.data);
+              } catch (err) { console.warn('[Jarvis] bc msg error', err); }
+            };
+            console.log('[Jarvis] BroadcastChannel sync enabled');
+          } catch (err) {
+            console.warn('[Jarvis] BroadcastChannel failed', err);
+          }
+        } else {
+          console.warn('[Jarvis] BroadcastChannel not available');
+        }
+      }
+
+      function start() { 
+        if (running) return;
+        running = true; 
+        init(); 
+        broadcastState('announce');
+        updateSyncStatus('Active');
+        
+        // Update settings
+        memoryManager.data.settings.syncEnabled = true;
+        memoryManager.saveData();
+      }
+      
+      function stop() { 
+        running = false; 
+        if (bc) {
+          try { bc.close(); } catch (e) {}
+          bc = null;
+        }
+        peers.clear();
+        updateSyncStatus('Inactive');
+        
+        // Update settings
+        memoryManager.data.settings.syncEnabled = false;
+        memoryManager.saveData();
+      }
+      
+      function resume() { 
+        if (!running && memoryManager.data.settings.syncEnabled) {
+          start();
+        }
+      }
+      
+      function reduceWorkload() { 
+        // Reduce sync frequency when battery is low
+        console.log('[Jarvis] Reducing sync workload due to low battery');
+      }
+
+      function broadcastState(type='snapshot') {
+        if (!bc || !memoryManager || !running) return;
+        try {
+          const payload = { 
+            type, 
+            device: Device.getDeviceType(), 
+            ts: Date.now(),
+            id: Math.random().toString(36).substring(2, 9)
+          };
+          if (type === 'snapshot') {
+            payload.memory = { 
+              messages: memoryManager.data.messages.slice(-50) // Only recent messages
+            };
+          }
+          bc.postMessage(payload);
+        } catch (e) { console.warn('[Jarvis] broadcast error', e); }
+      }
+      
+      function broadcastMessage(message) {
+        if (!bc || !running) return;
+        try {
+          const payload = {
+            type: 'message',
+            message: message,
+            device: Device.getDeviceType(),
+            ts: Date.now()
+          };
+          bc.postMessage(payload);
+        } catch (e) { console.warn('[Jarvis] message broadcast error', e); }
+      }
+
+      function handleIncoming(msg) {
+        if (!msg || !running) return;
+        
+        // Track peers
+        if (msg.id) {
+          peers.add(msg.id);
+          updatePeerCount();
+        }
+        
+        if (msg.type === 'announce') {
+          console.log('[Jarvis] peer announced:', msg.device, msg.ts);
+          // Respond with our own snapshot
+          setTimeout(() => broadcastState('snapshot'), 100);
+        } else if (msg.type === 'snapshot' && msg.memory && Array.isArray(msg.memory.messages)) {
+          // Basic merge: only add messages we don't have (based on id)
+          const ours = memoryManager.data.messages;
+          const existingIds = new Set(ours.map(m => m.id));
+          let added = 0;
+          
+          msg.memory.messages.forEach(m => {
+            if (!existingIds.has(m.id)) { 
+              memoryManager.data.messages.push(m); 
+              added++; 
+            }
+          });
+          
+          if (added > 0) { 
+            memoryManager.saveData(); 
+            memoryManager.updateAllDashboards(); 
+            console.log('[Jarvis] merged', added, 'messages from peer'); 
+          }
+        } else if (msg.type === 'message' && msg.message) {
+          // Add individual message
+          const existingIds = new Set(memoryManager.data.messages.map(m => m.id));
+          if (!existingIds.has(msg.message.id)) {
+            memoryManager.data.messages.push(msg.message);
+            memoryManager.saveData();
+            memoryManager.updateAllDashboards();
+            
+            // Add to UI if it's from assistant
+            if (msg.message.sender === 'assistant') {
+              appendMessage(msg.message.text, 'bot');
+            }
+          }
+        }
+      }
+      
+      function updateSyncStatus(status) {
+        const statusEl = document.getElementById('sync-status');
+        if (statusEl) statusEl.textContent = status;
+      }
+      
+      function updatePeerCount() {
+        const countEl = document.getElementById('connected-devices');
+        if (countEl) countEl.textContent = peers.size;
+      }
+
+      // Expose a manual full-export to local network
+      function exportForLAN() {
+        const exportData = { 
+          ...memoryManager.data, 
+          exportedAt: new Date().toISOString(), 
+          device: Device.getDeviceType(),
+          version: '1.0'
+        };
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        return { url, filename: `jarvis-lan-${Device.getDeviceType()}-${new Date().toISOString().split('T')[0]}.json` };
+      }
+
+      // Public API
+      return { start, stop, resume, broadcastState, broadcastMessage, exportForLAN, reduceWorkload };
+    })();
+
+    // Meeting Whisperer
+    const MeetingWhisperer = (function(){
+      let audioContext, micStream, analyser, whisperOverlay;
+      let active = false;
+      let lastSuggestionTime = 0;
+
+      function createOverlay() {
+        whisperOverlay = document.createElement('div');
+        whisperOverlay.id = 'jarvis-whisper-overlay';
+        Object.assign(whisperOverlay.style, {
+          position: 'fixed', right: '12px', bottom: '12px', zIndex: 5000,
+          background: 'rgba(20,20,24,0.85)', color: 'white', padding: '8px 12px', 
+          borderRadius: '10px', boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
+          fontSize: '14px', maxWidth: '300px'
+        });
+        whisperOverlay.innerHTML = `
+          <div style="font-weight:600; display:flex; align-items:center; gap:8px;">
+            <i class="fas fa-ear-listen"></i> Meeting Whisperer
+          </div>
+          <div id="jarvis-whisper-text" style="font-size:13px; opacity:0.9; margin-top:6px;">Idle - monitoring ambient audio</div>
+        `;
+        document.body.appendChild(whisperOverlay);
+      }
+
+      async function start() {
+        if (active) return;
+        
+        try {
+          // Request microphone permission
+          micStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              sampleRate: 44100
+            }, 
+            video: false 
+          });
+          
+          // Set up audio analysis
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const src = audioContext.createMediaStreamSource(micStream);
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 256;
+          analyser.smoothingTimeConstant = 0.8;
+          src.connect(analyser);
+
+          if (!whisperOverlay) createOverlay();
+          active = true;
+          updateWhispererStatus('Active');
+          
+          // Update settings
+          memoryManager.data.settings.whispererEnabled = true;
+          memoryManager.saveData();
+          
+          runAnalysisLoop();
+          console.log('[Jarvis] MeetingWhisperer started');
+        } catch (err) {
+          console.warn('[Jarvis] MeetingWhisperer permission error', err);
+          showNotification('Jarvis Whisperer needs microphone access to function. Please allow microphone access and try again.', 'danger');
+          stop();
+        }
+      }
+
+      function stop() {
+        active = false;
+        if (micStream) {
+          micStream.getTracks().forEach(t => t.stop());
+          micStream = null;
+        }
+        if (audioContext) {
+          audioContext.close();
+          audioContext = null;
+        }
+        analyser = null;
+        
+        if (whisperOverlay && whisperOverlay.parentNode) {
+          whisperOverlay.parentNode.removeChild(whisperOverlay);
+          whisperOverlay = null;
+        }
+        
+        updateWhispererStatus('Inactive');
+        
+        // Update settings
+        memoryManager.data.settings.whispererEnabled = false;
+        memoryManager.saveData();
+      }
+
+      function runAnalysisLoop() {
+        if (!active || !analyser) return;
+        
+        try {
+          const buffer = new Uint8Array(analyser.frequencyBinCount);
+          analyser.getByteFrequencyData(buffer);
+          
+          // Calculate volume level
+          let sum = 0;
+          for (let i = 0; i < buffer.length; i++) {
+            sum += buffer[i];
+          }
+          const avg = sum / buffer.length;
+          const level = Math.round(avg);
+          
+          const textEl = document.getElementById('jarvis-whisper-text');
+          if (textEl) {
+            textEl.textContent = level > 25 ? 
+              'Speech detected - analyzing context...' : 
+              'Ambient noise level: ' + level;
+          }
+
+          // If speech detected, show suggestions occasionally
+          if (level > 30 && Date.now() - lastSuggestionTime > 30000) {
+            showSuggestion();
+            lastSuggestionTime = Date.now();
+          }
+        } catch (err) {
+          console.warn('[Jarvis] Whisperer analysis error', err);
+        }
+        
+        if (active) {
+          setTimeout(runAnalysisLoop, 1000);
+        }
+      }
+      
+      function updateWhispererStatus(status) {
+        const statusEl = document.getElementById('whisperer-status');
+        if (statusEl) statusEl.textContent = status;
+        
+        const micEl = document.getElementById('mic-access');
+        if (micEl) micEl.textContent = active ? 'Granted' : 'Not granted';
+      }
+
+      function showSuggestion() {
+        const suggestions = [
+          "Sounds like a meeting is happening. Would you like me to take notes?",
+          "I detect a conversation. Use the command '/summary' to capture key points.",
+          "This seems important. Remember to note action items.",
+          "I can help organize meeting notes if you tell me what's being discussed.",
+          "Sounds like a decision is being made. You might want to document it."
+        ];
+        
+        const suggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
+        
+        // Update overlay
+        const textEl = document.getElementById('jarvis-whisper-text');
+        if (textEl) {
+          textEl.innerHTML = `<strong>Suggestion:</strong> ${suggestion}`;
+        }
+        
+        // Add to suggestions UI
+        addSuggestionToUI(suggestion);
+        
+        // Show notification
+        showNotification('Meeting Whisperer', suggestion);
+      }
+      
+      function addSuggestionToUI(suggestion) {
+        const suggestionsContainer = document.getElementById('whisperer-suggestions');
+        if (!suggestionsContainer) return;
+        
+        if (suggestionsContainer.querySelector('.chart-placeholder')) {
+          suggestionsContainer.innerHTML = '';
+        }
+        
+        const suggestionEl = document.createElement('div');
+        suggestionEl.className = 'reflection-item';
+        suggestionEl.innerHTML = `
+          <div>${suggestion}</div>
+          <small>${new Date().toLocaleTimeString()}</small>
+        `;
+        
+        suggestionsContainer.prepend(suggestionEl);
+      }
+
+      function showNotification(title, message) {
+        // Check if browser supports notifications
+        if (!('Notification' in window)) return;
+        
+        if (Notification.permission === 'granted') {
+          new Notification(title, { body: message, icon: 'https://example.com/icon.png' });
+        } else if (Notification.permission !== 'denied') {
+          Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+              new Notification(title, { body: message, icon: 'https://example.com/icon.png' });
+            }
+          });
+        }
+      }
+
+      return { start, stop, active: () => active };
+    })();
+
+    // Battery awareness to save battery
+    function setupBatteryAwareness() {
+      if ('getBattery' in navigator) {
+        navigator.getBattery().then(batt => {
+          function onBatteryChange() {
+            console.log('[Jarvis] battery level', batt.level, 'charging', batt.charging);
+            if (batt.level < 0.2 && !batt.charging) {
+              // Reduce resource-intensive operations
+              if (window.JarvisSync) {
+                JarvisSync.reduceWorkload();
+              }
+              
+              if (window.MeetingWhisperer && MeetingWhisperer.active()) {
+                // Don't stop whisperer but reduce analysis frequency
+                console.log('[Jarvis] Battery low, whisperer may use more power');
+              }
+            }
+          }
+          
+          batt.addEventListener('levelchange', onBatteryChange);
+          batt.addEventListener('chargingchange', onBatteryChange);
+          onBatteryChange();
+        }).catch(() => {});
+      }
+    }
+
+    // Service Worker registration for background sync
+    function registerServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/jarvis-sw.js').then(reg => {
+          console.log('[Jarvis] Service Worker registered', reg);
+        }).catch(err => {
+          console.warn('[Jarvis] Service Worker registration failed', err);
+        });
+      }
+    }
+
+    // Native Bridge Hooks (for Android WebView & iOS WKWebView)
+    window.JarvisNativeBridge = {
+      onNativeEvent(event, payload) {
+        console.log('[JarvisNative] event', event, payload);
+        if (event === 'syncSnapshot') {
+          try { 
+            const remote = JSON.parse(payload); 
+            if (remote && remote.messages) {
+              // Handle remote snapshot
+              const existingIds = new Set(memoryManager.data.messages.map(m => m.id));
+              let added = 0;
+              remote.messages.forEach(m => { 
+                if (!existingIds.has(m.id)) { 
+                  memoryManager.data.messages.push(m); 
+                  added++; 
+                } 
+              });
+              if (added) { 
+                memoryManager.saveData(); 
+                memoryManager.updateAllDashboards(); 
+              }
+            }
+          } catch(e){
+            console.warn('[Jarvis] Error processing native sync', e);
+          }
+        }
+      }
+    };
+
+    // Expose helpers for native wrappers
+    window.JarvisNative = {
+      exportMemoryForLAN() { return JarvisSync.exportForLAN(); },
+      triggerWhisperer() { MeetingWhisperer.start(); },
+      stopWhisperer() { MeetingWhisperer.stop(); },
+      getStatus() {
+        return {
+          version: '1.0',
+          messages: memoryManager.data.messages.length,
+          syncEnabled: memoryManager.data.settings.syncEnabled,
+          whispererActive: MeetingWhisperer.active()
+        };
+      }
+    };
+
+    // Initialize Stage 4 features
+    function initializeStage4() {
+      // Set up battery awareness
+      setupBatteryAwareness();
+      
+      // Register service worker
+      registerServiceWorker();
+      
+      // Restore previous states
+      if (memoryManager.data.settings.syncEnabled) {
+        JarvisSync.start();
+      }
+      
+      if (memoryManager.data.settings.whispererEnabled) {
+        MeetingWhisperer.start();
+      }
+      
+      // Listen to visibility changes
+      document.addEventListener('visibilitychange', () => {
+        const state = document.visibilityState;
+        console.log('[Jarvis] visibilitychange ->', state);
+        
+        // If the page becomes hidden, reduce polling / pause heavy tasks
+        if (state === 'hidden') {
+          JarvisSync && JarvisSync.reduceWorkload();
+        } else {
+          JarvisSync && JarvisSync.resume();
+        }
+      });
+      
+      console.log('[Jarvis] Stage 4 features initialized');
+    }
+
+    // ===== VOICE RECOGNITION =====
+    class VoiceRecognition {
+      constructor() {
+        this.recognition = null;
+        this.isListening = false;
+        this.initializeRecognition();
+      }
+
+      initializeRecognition() {
+        if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+          const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+          this.recognition = new SpeechRecognition();
+          this.recognition.continuous = false;
+          this.recognition.interimResults = false;
+          this.recognition.lang = 'en-US';
+
+          this.recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('message-input').value = transcript;
+            this.stopListening();
+          };
+
+          this.recognition.onerror = (event) => {
+            console.error('Speech recognition error', event.error);
+            this.stopListening();
+            showNotification('Voice recognition error: ' + event.error, 'danger');
+          };
+
+          this.recognition.onend = () => {
+            this.stopListening();
+          };
+        } else {
+          console.warn('Speech recognition not supported in this browser');
+        }
+      }
+
+      startListening() {
+        if (this.recognition) {
+          try {
+            this.recognition.start();
+            this.isListening = true;
+            document.getElementById('voice-btn').classList.add('voice-listening');
+            document.getElementById('voice-btn').classList.add('active');
+          } catch (error) {
+            console.error('Speech recognition start error:', error);
+          }
+        } else {
+          showNotification('Speech recognition is not supported in your browser. Please use Chrome or Edge.', 'warning');
+        }
+      }
+
+      stopListening() {
+        if (this.recognition && this.isListening) {
+          this.recognition.stop();
+          this.isListening = false;
+          document.getElementById('voice-btn').classList.remove('voice-listening');
+          document.getElementById('voice-btn').classList.remove('active');
+        }
+      }
+
+      toggleListening() {
+        if (this.isListening) {
+          this.stopListening();
+        } else {
+          this.startListening();
+        }
+      }
+    }
+
+    // Initialize voice recognition
+    const voiceRecognizer = new VoiceRecognition();
+
+    // ===== UI INITIALIZATION =====
+    document.addEventListener("DOMContentLoaded", () => {
+      initializeUI();
+      memoryManager.updateAllDashboards();
+      initializeGestures();
+      initializeStage4();
+      
+      // Check if system is locked on load
+      if (memoryManager.data.settings.locked) {
+        memoryManager.triggerPanicMode();
+      }
+      
+      // Set initial theme
+      const initialTheme = memoryManager.data.settings.theme || 'dark';
+      document.documentElement.setAttribute('data-theme', initialTheme);
+      document.getElementById('theme-toggle-checkbox').checked = initialTheme === 'light';
+      
+      console.log("JARVIS AI Assistant v1.0 initialized successfully! ✅");
+    });
+
+    function initializeUI() {
+      // Get DOM elements
+      const chatForm = document.getElementById('chat-form');
+      const messageInput = document.getElementById('message-input');
+      const chatMessages = document.getElementById('chat-messages');
+      const settingsBtn = document.getElementById('settings-btn');
+      const closeSettings = document.getElementById('close-settings');
+      const settingsModal = document.getElementById('settings-modal');
+      const nsfwToggle = document.getElementById('nsfw-toggle');
+      const incognitoToggle = document.getElementById('incognito-toggle');
+      const pauseToggle = document.getElementById('pause-toggle');
+      const voiceBtn = document.getElementById('voice-btn');
+      const panicBtn = document.getElementById('panic-btn');
+      const searchInput = document.getElementById('search-input');
+      const personaSelect = document.getElementById('persona-select');
+      const audioOutputSelect = document.getElementById('audio-output-select');
+      const unlockMethodSelect = document.getElementById('unlock-method-select');
+      const themeToggleCheckbox = document.getElementById('theme-toggle-checkbox');
+      
+      // Security feature buttons
+      const testLockdownBtn = document.querySelector('.test-lockdown-btn');
+      const configureAuthBtn = document.querySelector('.configure-auth-btn');
+      const testVoiceBtn = document.querySelector('.test-voice-btn');
+      const testDownloadBtn = document.querySelector('.test-download-btn');
+      
+      // Memory management buttons
+      const exportMemoryBtn = document.getElementById('export-memory-btn');
+      const importMemoryBtn = document.getElementById('import-memory-btn');
+      const clearMemoryBtn = document.getElementById('clear-memory-btn');
+      const optimizeMemoryBtn = document.getElementById('optimize-memory-btn');
+      const importFile = document.getElementById('import-file');
+      
+      // Settings modal memory buttons
+      const settingsExportBtn = document.getElementById('settings-export-memory-btn');
+      const settingsClearBtn = document.getElementById('settings-clear-memory-btn');
+      
+      // LAN sync buttons
+      const startSyncBtn = document.getElementById('start-sync-btn');
+      const stopSyncBtn = document.getElementById('stop-sync-btn');
+      const exportLanBtn = document.getElementById('export-lan-btn');
+      const importLanBtn = document.getElementById('import-lan-btn');
+      
+      // Whisperer buttons
+      const startWhispererBtn = document.getElementById('start-whisperer-btn');
+      const stopWhispererBtn = document.getElementById('stop-whisperer-btn');
+      const whispererFeatureBtn = document.getElementById('whisperer-feature-btn');
+      
+      // Toggle button states from memory
+      let nsfwEnabled = memoryManager.data.settings.nsfw;
+      let incognitoEnabled = memoryManager.data.settings.incognito;
+      let pauseEnabled = memoryManager.data.settings.paused;
+      
+      // Set persona from memory
+      if (personaSelect) {
+        personaSelect.value = memoryManager.data.settings.persona || 'default';
+      }
+      
+      // Set audio output from memory
+      if (audioOutputSelect) {
+        audioOutputSelect.value = memoryManager.data.settings.audioOutput || 'default';
+      }
+      
+      // Set unlock method from memory
+      if (unlockMethodSelect) {
+        unlockMethodSelect.value = memoryManager.data.settings.unlockMethod || 'password';
+        memoryManager.setupUnlockMethod(unlockMethodSelect.value);
+      }
+      
+      // Set theme toggle from memory
+      if (themeToggleCheckbox) {
+        themeToggleCheckbox.checked = memoryManager.data.settings.theme === 'light';
+      }
+      
+      // Restore toggle states
+      updateToggleState(nsfwToggle, nsfwEnabled);
+      updateToggleState(incognitoToggle, incognitoEnabled);
+      updateToggleState(pauseToggle, pauseEnabled);
+      
+      // Handle form submission
+      chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleSendMessage();
+      });
+      
+      // Auto-resize textarea
+      messageInput.addEventListener('input', () => {
+        messageInput.style.height = 'auto';
+        messageInput.style.height = messageInput.scrollHeight + 'px';
+      });
+      
+      // Handle Enter key in message input - FIXED: Enter sends, Shift+Enter creates new line
+      messageInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          if (e.shiftKey) {
+            // Allow default behavior (new line)
+            return;
+          } else {
+            e.preventDefault();
+            handleSendMessage();
+          }
+        }
+      });
+      
+      // Settings modal
+      settingsBtn.addEventListener('click', () => {
+        openModal('settings-modal');
+      });
+      
+      closeSettings.addEventListener('click', () => {
+        closeModal('settings-modal');
+      });
+      
+      // Security feature buttons
+      if (testLockdownBtn) {
+        testLockdownBtn.addEventListener('click', () => {
+          memoryManager.triggerPanicMode();
+        });
+      }
+      
+      if (configureAuthBtn) {
+        configureAuthBtn.addEventListener('click', () => {
+          // Just show the unlock method section in the same modal
+          const unlockSection = document.getElementById('unlock-method-select');
+          if (unlockSection) {
+            unlockSection.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      }
+      
+      if (testVoiceBtn) {
+        testVoiceBtn.addEventListener('click', () => {
+          requestVoiceChallenge();
+        });
+      }
+      
+      if (testDownloadBtn) {
+        testDownloadBtn.addEventListener('click', () => {
+          protectedDownload('test-file.txt', 'This is a test file content for protected download.');
+        });
+      }
+      
+      // Persona selector
+      if (personaSelect) {
+        personaSelect.addEventListener('change', (e) => {
+          memoryManager.data.settings.persona = e.target.value;
+          memoryManager.saveData();
+        });
+      }
+      
+      // Audio output selector
+      if (audioOutputSelect) {
+        audioOutputSelect.addEventListener('change', (e) => {
+          memoryManager.data.settings.audioOutput = e.target.value;
+          memoryManager.saveData();
+        });
+      }
+      
+      // Unlock method selector
+      if (unlockMethodSelect) {
+        unlockMethodSelect.addEventListener('change', (e) => {
+          memoryManager.data.settings.unlockMethod = e.target.value;
+          memoryManager.saveData();
+          memoryManager.setupUnlockMethod(e.target.value);
+        });
+      }
+      
+      // Theme toggle
+      if (themeToggleCheckbox) {
+        themeToggleCheckbox.addEventListener('change', (e) => {
+          memoryManager.toggleTheme();
+        });
+      }
+      
+      // Toggle buttons
+      nsfwToggle.addEventListener('click', () => {
+        nsfwEnabled = !nsfwEnabled;
+        updateToggleState(nsfwToggle, nsfwEnabled);
+        memoryManager.data.settings.nsfw = nsfwEnabled;
+        memoryManager.saveData();
+        
+        if (nsfwEnabled) {
+          incognitoEnabled = false;
+          updateToggleState(incognitoToggle, incognitoEnabled);
+          memoryManager.data.settings.incognito = incognitoEnabled;
+        }
+      });
+      
+      incognitoToggle.addEventListener('click', () => {
+        incognitoEnabled = !incognitoEnabled;
+        updateToggleState(incognitoToggle, incognitoEnabled);
+        memoryManager.data.settings.incognito = incognitoEnabled;
+        memoryManager.saveData();
+        
+        if (incognitoEnabled) {
+          nsfwEnabled = false;
+          updateToggleState(nsfwToggle, nsfwEnabled);
+          memoryManager.data.settings.nsfw = nsfwEnabled;
+        }
+      });
+      
+      pauseToggle.addEventListener('click', () => {
+        pauseEnabled = !pauseEnabled;
+        updateToggleState(pauseToggle, pauseEnabled);
+        memoryManager.data.settings.paused = pauseEnabled;
+        memoryManager.saveData();
+        
+        if (pauseEnabled) {
+          nsfwEnabled = false;
+          incognitoEnabled = false;
+          updateToggleState(nsfwToggle, nsfwEnabled);
+          updateToggleState(incognitoToggle, incognitoEnabled);
+          memoryManager.data.settings.nsfw = nsfwEnabled;
+          memoryManager.data.settings.incognito = incognitoEnabled;
+        }
+      });
+      
+      // Voice button
+      voiceBtn.addEventListener('click', () => {
+        voiceRecognizer.toggleListening();
+      });
+      
+      // Panic button
+      panicBtn.addEventListener('click', () => {
+        memoryManager.triggerPanicMode();
+      });
+
+      // Memory management event listeners
+      exportMemoryBtn.addEventListener('click', () => {
+        memoryManager.exportMemory();
+      });
+
+      importMemoryBtn.addEventListener('click', () => {
+        importFile.click();
+      });
+
+      importFile.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          memoryManager.importMemory(e.target.files[0]);
+        }
+      });
+
+      clearMemoryBtn.addEventListener('click', () => {
+        memoryManager.clearMemory();
+      });
+
+      optimizeMemoryBtn.addEventListener('click', () => {
+        memoryManager.optimizeMemory();
+      });
+
+      // Settings modal memory buttons
+      settingsExportBtn.addEventListener('click', () => {
+        memoryManager.exportMemory();
+        closeModal('settings-modal');
+      });
+
+      settingsClearBtn.addEventListener('click', () => {
+        memoryManager.clearMemory();
+        closeModal('settings-modal');
+      });
+
+      // LAN sync buttons
+      if (startSyncBtn) {
+        startSyncBtn.addEventListener('click', () => {
+          JarvisSync.start();
+        });
+      }
+
+      if (stopSyncBtn) {
+        stopSyncBtn.addEventListener('click', () => {
+          JarvisSync.stop();
+        });
+      }
+
+      if (exportLanBtn) {
+        exportLanBtn.addEventListener('click', () => {
+          const data = JarvisSync.exportForLAN();
+          const a = document.createElement('a');
+          a.href = data.url;
+          a.download = data.filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(data.url), 2000);
+        });
+      }
+
+      if (importLanBtn) {
+        importLanBtn.addEventListener('click', () => {
+          importFile.click();
+        });
+      }
+
+      // Whisperer buttons
+      if (startWhispererBtn) {
+        startWhispererBtn.addEventListener('click', () => {
+          MeetingWhisperer.start();
+        });
+      }
+
+      if (stopWhispererBtn) {
+        stopWhispererBtn.addEventListener('click', () => {
+          MeetingWhisperer.stop();
+        });
+      }
+
+      if (whispererFeatureBtn) {
+        whispererFeatureBtn.addEventListener('click', () => {
+          closeModal('settings-modal');
+          setTimeout(() => {
+            openModal('whisperer-modal');
+          }, 120);
+        });
+      }
+
+      // Search functionality
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          const query = e.target.value.trim();
+          if (query.length > 2) {
+            memoryManager.performSearch(query);
+          } else if (query.length === 0) {
+            document.getElementById('search-results').innerHTML = '<div class="chart-placeholder">Search results will appear here. Try searching for specific words or topics.</div>';
+          }
+        });
+      }
+      
+      // Feature buttons in settings hub
+      document.querySelectorAll('#settings-modal [data-target]').forEach(btn => {
+        const target = btn.getAttribute('data-target');
+        btn.addEventListener('click', () => {
+          closeModal('settings-modal');
+          setTimeout(() => {
+            openModal(target);
+            if (target === 'goals-modal') {
+              memoryManager.updateGoalsUI();
+            } else if (target === 'reflection-modal') {
+              memoryManager.updateReflectionUI();
+            }
+          }, 120);
+        });
+      });
+      
+      // Close buttons in feature modals
+      document.querySelectorAll('[data-close]').forEach(btn => {
+        const target = btn.getAttribute('data-close');
+        btn.addEventListener('click', () => closeModal(target));
+      });
+
+      // Add click outside to close modals
+      document.querySelectorAll('.modal-overlay').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            closeModal(modal.id);
+          }
+        });
+      });
+
+      // Add Escape key to close modals
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const openModals = document.querySelectorAll('.modal-overlay[aria-hidden="false"]');
+          if (openModals.length > 0) {
+            // Don't close the lock screen with Escape
+            if (openModals[openModals.length - 1].id !== 'lock-screen') {
+              closeModal(openModals[openModals.length - 1].id);
+            }
+          }
+        }
+      });
+
+      // Update toggle state helper
+      function updateToggleState(toggle, enabled) {
+        toggle.setAttribute('aria-pressed', enabled.toString());
+        toggle.classList.toggle('active', enabled);
+      }
+      
+      // Handle sending messages
+      function handleSendMessage() {
+        const message = messageInput.value.trim();
+        if (!message) return;
+        
+        // Don't process if paused
+        if (pauseEnabled) {
+          showNotification("Assistant is paused. Unpause to continue chatting.", 'warning');
+          return;
+        }
+        
+        // Create and append user message
+        appendMessage(message, 'user');
+        memoryManager.addMessage(message, 'user');
+        
+        // Clear input and reset height
+        messageInput.value = '';
+        messageInput.style.height = 'auto';
+        
+        // Generate and append bot response after a short delay
+        setTimeout(() => {
+          const response = generateBotResponse(message);
+          appendMessage(response, 'bot');
+          memoryManager.addMessage(response, 'assistant');
+        }, 600);
+      }
+      
+      // Append message to chat
+      function appendMessage(text, sender) {
+        const messageEl = document.createElement('div');
+        messageEl.className = `message ${sender === 'user' ? 'user-message' : 'assistant-message'}`;
+        
+        const avatar = document.createElement('div');
+        avatar.className = 'avatar';
+        avatar.textContent = sender === 'user' ? 'U' : 'J';
+        
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        
+        const p = document.createElement('p');
+        p.textContent = text;
+        
+        const time = document.createElement('time');
+        time.className = 'message-time';
+        time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        messageContent.appendChild(p);
+        messageContent.appendChild(time);
+        
+        messageEl.appendChild(avatar);
+        messageEl.appendChild(messageContent);
+        
+        chatMessages.appendChild(messageEl);
+        
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+      
+      // Generate bot response based on persona
+      function generateBotResponse(userMessage) {
+        const lowerMessage = userMessage.toLowerCase();
+        const totalMessages = memoryManager.data.messages.length;
+        const currentMood = memoryManager.data.analytics.mood;
+        const persona = memoryManager.data.settings.persona || 'default';
+        
+        // Check for special commands
+        if (lowerMessage.startsWith('/note ')) {
+          return "I've saved that note to your meeting notes. Use '/summary' to see all notes.";
+        }
+        
+        if (lowerMessage === '/summary') {
+          return "Here's your meeting summary:\n- Discussed project timeline\n- Agreed on next steps\n- Scheduled follow-up for next week";
+        }
+        
+        // Base responses
+        let response = "";
+        
+        if (/(hello|hi|hey)/.test(lowerMessage)) {
+          if (totalMessages > 10) {
+            response = `Hello again! We've chatted ${Math.floor(totalMessages/2)} times. How can I help you today?`;
+          } else {
+            response = "Hello there! How can I assist you today?";
+          }
+        } else if (/(how are you)/.test(lowerMessage)) {
+          response = `I'm functioning optimally, thank you for asking! I've noticed you seem ${currentMood} today. How about you?`;
+        } else if (/(memory|remember|recall)/.test(lowerMessage)) {
+          response = `I have ${totalMessages} messages in my memory. You can view, export, or manage my memory through the settings panel.`;
+        } else if (/(security|lock|protection)/.test(lowerMessage)) {
+          response = "I have advanced security features including emergency lockdown, voice verification, and encrypted data storage. Try the panic button or voice commands!";
+        } else if (/(test|demo)/.test(lowerMessage)) {
+          response = "Feel free to test my security features! Try the voice verification, emergency lockdown, or protected download functionality.";
+        } else if (/(bye|goodbye|see you)/.test(lowerMessage)) {
+          response = "Goodbye! Feel free to return if you need any assistance. I'll remember our conversation!";
+        } else if (/(thank|thanks|appreciate)/.test(lowerMessage)) {
+          response = "You're welcome! Is there anything else I can help with?";
+        } else if (/(weather|forecast)/.test(lowerMessage)) {
+          response = "I don't have real-time weather data in this demo, but I can help with many other things!";
+        } else if (/(time|date)/.test(lowerMessage)) {
+          response = `The current time is ${new Date().toLocaleTimeString()}. We've been chatting since ${new Date(memoryManager.data.analytics.activeSince).toLocaleDateString()}.`;
+        } else if (/(joke|funny)/.test(lowerMessage)) {
+          const jokes = [
+            "Why don't scientists trust atoms? Because they make up everything!",
+            "Why did the scarecrow win an award? Because he was outstanding in his field!",
+            "What do you call a fake noodle? An impasta!",
+            "Why don't programmers like nature? It has too many bugs!"
+          ];
+          response = jokes[Math.floor(Math.random() * jokes.length)];
+        } else if (/(what can you do|help|abilities|features)/.test(lowerMessage)) {
+          response = "I can chat with you, remember our conversations, analyze your mood patterns, provide insights, and much more! Check out the Settings panel to explore all my features like Analytics Dashboard, Memory Management, and Context Linking.";
+        } else {
+          const responses = [
+            "That's interesting. Tell me more!",
+            "I understand. How does that make you feel?",
+            "I see. What else would you like to discuss?",
+            "Fascinating. I'd like to learn more about that.",
+            "Thanks for sharing. Is there something specific you'd like help with?",
+            `Based on our ${Math.floor(totalMessages/2)} previous conversations, I think you might be interested in exploring this topic further.`
+          ];
+          response = responses[Math.floor(Math.random() * responses.length)];
+        }
+        
+        // Apply persona styling
+        switch(persona) {
+          case 'serious':
+            response = response.replace(/!/g, '.');
+            response = response.charAt(0).toUpperCase() + response.slice(1);
+            break;
+          case 'chill':
+            response = response.toLowerCase();
+            if (Math.random() > 0.5) response += " 😎";
+            if (Math.random() > 0.7) response += " no worries";
+            break;
+          case 'playful':
+            if (Math.random() > 0.5) response = response.replace(/\./g, '!');
+            if (Math.random() > 0.7) response = "Hey! " + response;
+            if (Math.random() > 0.8) response += " 😜";
+            break;
+          case 'professional':
+            response = response.charAt(0).toUpperCase() + response.slice(1);
+            if (!response.endsWith('.')) response += '.';
+            break;
+          default:
+            // Default persona, no changes
+            break;
+        }
+        
+        return response;
+      }
+    }
+    
+    // Initialize device gestures
+    function initializeGestures() {
+      // Shake detection for panic button
+      if (window.DeviceMotionEvent) {
+        let lastShakeTime = 0;
+        const threshold = 15; // shake intensity threshold
+        let shakeCount = 0;
+        
+        window.addEventListener('devicemotion', (e) => {
+          const acceleration = e.accelerationIncludingGravity;
+          const intensity = Math.sqrt(
+            acceleration.x * acceleration.x +
+            acceleration.y * acceleration.y +
+            acceleration.z * acceleration.z
+          );
+          
+          if (intensity > threshold) {
+            const currentTime = new Date().getTime();
+            if (currentTime - lastShakeTime > 1000) { // at least 1 second between shakes
+              shakeCount++;
+              lastShakeTime = currentTime;
+              
+              if (shakeCount >= 3) { // triple shake for panic
+                shakeCount = 0;
+                document.getElementById('panic-btn').click();
+              }
+            }
+          }
+        });
+      }
+    }
+    
+    // Modal functions
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (!el) { 
+        console.warn('Modal element not found:', id);
+        return;
+      }
+      el.setAttribute('aria-hidden', 'false');
+      
+      // Update data when opening modals
+      if (id.includes('memory') || id.includes('analytics') || id.includes('mood') || id.includes('habits')) {
+        memoryManager.updateAllDashboards();
+      }
+    }
+    
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (!el) { 
+        console.warn('Modal element not found:', id);
+        return;
+      }
+      el.setAttribute('aria-hidden', 'true');
+    }
+    
+    // Expose functions globally for potential external use
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+    window.memoryManager = memoryManager;
+    window.JarvisSync = JarvisSync;
+    window.MeetingWhisperer = MeetingWhisperer;
+    window.requestVoiceChallenge = requestVoiceChallenge;
+    window.protectedDownload = protectedDownload;
+  </script>
+</body>
+</html>
