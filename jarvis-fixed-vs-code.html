@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark light" />
+  <title>JARVIS - Personal AI Assistant v1.0</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg: #0f0f10;
+      --bg-primary: #1a1b1e;
+      --bg-secondary: #222327;
+      --text-primary: #ffffff;
+      --text-secondary: #bdbec7;
+      --border-color: #2e3035;
+      --accent-primary: #6ea8fe;
+      --accent-secondary: #9b76ff;
+      --danger: #ff5e66;
+      --success: #1ad760;
+      --warning: #f59e0b;
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --border-radius: 16px;
+      --transition: all 0.3s ease;
+    }
+
+    html[data-theme="light"] {
+      --bg: #f5f7fb;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f1f3f6;
+      --text-primary: #111318;
+      --text-secondary: #444957;
+      --border-color: #e5e8ef;
+      --accent-primary: #3b82f6;
+      --accent-secondary: #7c3aed;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    * { 
+      box-sizing: border-box; 
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: var(--bg);
+      color: var(--text-primary);
+      padding: 20px;
+      min-height: 100vh;
+      transition: filter 0.3s ease;
+    }
+    
+    .app-container { 
+      max-width: 980px; 
+      margin: 0 auto; 
+      padding: 24px 16px 32px; 
+      transition: filter 0.3s ease;
+    }
+    
+    /* Header Styles */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 10px 14px;
+      position: sticky;
+      top: 20px;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .header .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent-primary);
+    }
+
+    .header .logo i {
+      font-size: 22px;
+    }
+
+    .header .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover {
+      background: var(--accent-primary);
+      color: white;
+      border-color: var(--accent-primary);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn.active {
+      background: var(--accent-primary);
+      color: white;
+      border-color: var(--accent-primary);
+    }
+
+    /* Main Content */
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 20px;
+      height: calc(100vh - 200px);
+    }
+
+    .chat-container {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .chat-header {
+      padding: 16px 20px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chat-title {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 0;
+    }
+
+    .message {
+      display: flex;
+      gap: 12px;
+      max-width: 80%;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .message.assistant {
+      align-self: flex-start;
+    }
+
+    .message-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .message.user .message-avatar {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .message.assistant .message-avatar {
+      background: var(--accent-secondary);
+      color: white;
+    }
+
+    .message-content {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 12px 16px;
+      color: var(--text-primary);
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+
+    .message.user .message-content {
+      background: var(--accent-primary);
+      color: white;
+      border-color: var(--accent-primary);
+    }
+
+    .input-form {
+      padding: 16px 20px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .message-input {
+      flex: 1;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      resize: none;
+      min-height: 44px;
+      max-height: 120px;
+      transition: var(--transition);
+    }
+
+    .message-input:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(110, 168, 254, 0.1);
+    }
+
+    .message-input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .send-btn {
+      background: var(--accent-primary);
+      border: none;
+      color: white;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .send-btn:hover {
+      background: var(--accent-secondary);
+      transform: translateY(-1px);
+    }
+
+    .send-btn:active {
+      transform: translateY(0);
+    }
+
+    .send-btn:disabled {
+      background: var(--border-color);
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 20px;
+      overflow-y: auto;
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar-section {
+      margin-bottom: 24px;
+    }
+
+    .sidebar-section h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .quick-action {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .quick-action:hover {
+      background: var(--accent-primary);
+      color: white;
+      border-color: var(--accent-primary);
+    }
+
+    .quick-action i {
+      width: 16px;
+      text-align: center;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .main-content {
+        grid-template-columns: 1fr;
+        height: calc(100vh - 160px);
+      }
+      
+      .sidebar {
+        order: 2;
+        height: auto;
+        max-height: 300px;
+      }
+      
+      .message {
+        max-width: 90%;
+      }
+    }
+
+    /* Notification Styles */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+      z-index: 1000;
+      animation: slideInRight 0.3s ease;
+      max-width: 300px;
+    }
+
+    .notification.success {
+      border-color: var(--success);
+      background: rgba(26, 215, 96, 0.1);
+    }
+
+    .notification.warning {
+      border-color: var(--warning);
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .notification.error {
+      border-color: var(--danger);
+      background: rgba(255, 94, 102, 0.1);
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* Loading Animation */
+    .loading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .loading-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .loading-dots span {
+      width: 4px;
+      height: 4px;
+      background: var(--text-secondary);
+      border-radius: 50%;
+      animation: loadingDots 1.4s infinite ease-in-out;
+    }
+
+    .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes loadingDots {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+
+    /* Modal Styles (if needed) */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    .modal-overlay[aria-hidden="false"] {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 20px;
+      padding: 4px;
+    }
+
+    .close-btn:hover {
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+  <!-- Application Container -->
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <i class="fas fa-robot"></i>
+        <span>JARVIS v1.0</span>
+      </div>
+      <div class="controls">
+        <button id="nsfw-toggle" class="btn" title="NSFW Filter" aria-pressed="false">
+          <i class="fas fa-shield-alt"></i>
+          NSFW
+        </button>
+        <button id="incognito-toggle" class="btn" title="Incognito Mode" aria-pressed="false">
+          <i class="fas fa-user-secret"></i>
+          Incognito
+        </button>
+        <button id="pause-toggle" class="btn" title="Pause Assistant" aria-pressed="false">
+          <i class="fas fa-pause"></i>
+          Pause
+        </button>
+        <button id="voice-btn" class="btn" title="Start Voice Input">
+          <i class="fas fa-microphone"></i>
+          Voice
+        </button>
+        <button id="settings-btn" class="btn" title="Settings">
+          <i class="fas fa-cog"></i>
+          Settings
+        </button>
+        <button id="emergency-btn" class="btn" title="Emergency Lock" style="background: var(--danger); color: white;">
+          <i class="fas fa-exclamation-triangle"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Chat Container -->
+      <div class="chat-container">
+        <!-- Chat Header -->
+        <div class="chat-header">
+          <div class="chat-title">
+            <i class="fas fa-comments"></i>
+            Chat with JARVIS
+            <div class="status-indicator"></div>
+            <span style="font-size: 12px; color: var(--text-secondary);">Online & Ready</span>
+          </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div id="chat-messages" class="chat-messages">
+          <!-- Welcome Message -->
+          <div class="message assistant">
+            <div class="message-avatar">
+              <i class="fas fa-robot"></i>
+            </div>
+            <div class="message-content">
+              Hello! I'm Jarvis, your personal AI assistant. I'm here to learn, adapt, and grow with you. How can I help you today?
+            </div>
+          </div>
+        </div>
+
+        <!-- Input Form -->
+        <form id="chat-form" class="input-form">
+          <textarea 
+            id="message-input" 
+            class="message-input" 
+            placeholder="Type your message..." 
+            rows="1"
+            required></textarea>
+          <button type="submit" class="send-btn" aria-label="Send message">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-section">
+          <h3>Quick Actions</h3>
+          <div class="quick-action" onclick="addQuickMessage('What can you help me with?')">
+            <i class="fas fa-question-circle"></i>
+            <span>What can you do?</span>
+          </div>
+          <div class="quick-action" onclick="addQuickMessage('Tell me a joke')">
+            <i class="fas fa-laugh"></i>
+            <span>Tell me a joke</span>
+          </div>
+          <div class="quick-action" onclick="addQuickMessage('What is the weather today?')">
+            <i class="fas fa-cloud-sun"></i>
+            <span>Weather</span>
+          </div>
+          <div class="quick-action" onclick="addQuickMessage('Set a reminder for 1 hour')">
+            <i class="fas fa-bell"></i>
+            <span>Set Reminder</span>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <h3>System Status</h3>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span>Memory Usage:</span>
+            <span id="memory-usage">0%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span>Response Time:</span>
+            <span id="response-time">0ms</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span>Messages:</span>
+            <span id="message-count">1</span>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <h3>Preferences</h3>
+          <div class="quick-action" onclick="toggleTheme()">
+            <i class="fas fa-moon" id="theme-icon"></i>
+            <span id="theme-text">Dark Mode</span>
+          </div>
+          <div class="quick-action" onclick="clearChat()">
+            <i class="fas fa-trash-alt"></i>
+            <span>Clear Chat</span>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Notification Container -->
+  <div id="notification-container"></div>
+
+  <!-- JavaScript -->
+  <script>
+    // ===== CORE VARIABLES =====
+    let messageCount = 1;
+    let isResponding = false;
+    let pauseEnabled = false;
+    let currentTheme = 'dark';
+    
+    // DOM Elements - Initialize after DOM loads
+    let messageInput;
+    let chatForm;
+    let chatMessages;
+    let sendButton;
+    
+    // ===== UTILITY FUNCTIONS =====
+    function waitForElement(selector, timeout = 5000) {
+      return new Promise((resolve, reject) => {
+        const element = document.getElementById(selector) || document.querySelector(selector);
+        if (element) {
+          resolve(element);
+          return;
+        }
+        
+        const observer = new MutationObserver((mutations, obs) => {
+          const element = document.getElementById(selector) || document.querySelector(selector);
+          if (element) {
+            resolve(element);
+            obs.disconnect();
+          }
+        });
+        
+        observer.observe(document, {
+          childList: true,
+          subtree: true
+        });
+        
+        setTimeout(() => {
+          observer.disconnect();
+          reject(new Error(`Element ${selector} not found within ${timeout}ms`));
+        }, timeout);
+      });
+    }
+
+    function showNotification(message, type = 'info', duration = 3000) {
+      const container = document.getElementById('notification-container');
+      if (!container) return;
+      
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.textContent = message;
+      
+      container.appendChild(notification);
+      
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, duration);
+    }
+
+    function updateMessageCount() {
+      const countEl = document.getElementById('message-count');
+      if (countEl) {
+        countEl.textContent = messageCount;
+      }
+    }
+
+    function updateMemoryUsage() {
+      const memoryEl = document.getElementById('memory-usage');
+      if (memoryEl && 'memory' in performance) {
+        const used = performance.memory.usedJSHeapSize;
+        const limit = performance.memory.jsHeapSizeLimit;
+        const percentage = Math.round((used / limit) * 100);
+        memoryEl.textContent = percentage + '%';
+      }
+    }
+
+    // ===== CORE CHAT FUNCTIONS =====
+    function addMessage(content, sender = 'assistant') {
+      if (!chatMessages) return;
+      
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${sender}`;
+      
+      const avatar = document.createElement('div');
+      avatar.className = 'message-avatar';
+      avatar.innerHTML = sender === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
+      
+      const messageContent = document.createElement('div');
+      messageContent.className = 'message-content';
+      messageContent.textContent = content;
+      
+      messageDiv.appendChild(avatar);
+      messageDiv.appendChild(messageContent);
+      
+      chatMessages.appendChild(messageDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      
+      messageCount++;
+      updateMessageCount();
+    }
+
+    function addLoadingMessage() {
+      if (!chatMessages) return null;
+      
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message assistant';
+      messageDiv.id = 'loading-message';
+      
+      const avatar = document.createElement('div');
+      avatar.className = 'message-avatar';
+      avatar.innerHTML = '<i class="fas fa-robot"></i>';
+      
+      const messageContent = document.createElement('div');
+      messageContent.className = 'message-content loading';
+      messageContent.innerHTML = `
+        Thinking...
+        <div class="loading-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      `;
+      
+      messageDiv.appendChild(avatar);
+      messageDiv.appendChild(messageContent);
+      
+      chatMessages.appendChild(messageDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      
+      return messageDiv;
+    }
+
+    function removeLoadingMessage() {
+      const loadingMessage = document.getElementById('loading-message');
+      if (loadingMessage && loadingMessage.parentNode) {
+        loadingMessage.parentNode.removeChild(loadingMessage);
+      }
+    }
+
+    async function simulateAIResponse(userMessage) {
+      // Simulate AI thinking time
+      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+      
+      // Simple response logic
+      const responses = [
+        "I understand your message. How can I help you further?",
+        "That's interesting! Tell me more about that.",
+        "I'm here to assist you with whatever you need.",
+        "Thank you for sharing that with me. What else would you like to know?",
+        "I'm processing your request. Is there anything specific you'd like me to help with?"
+      ];
+      
+      if (userMessage.toLowerCase().includes('hello') || userMessage.toLowerCase().includes('hi')) {
+        return "Hello! Nice to meet you. How are you doing today?";
+      }
+      
+      if (userMessage.toLowerCase().includes('help')) {
+        return "I'm here to help! I can assist you with various tasks, answer questions, or just have a conversation. What would you like to do?";
+      }
+      
+      if (userMessage.toLowerCase().includes('joke')) {
+        const jokes = [
+          "Why don't scientists trust atoms? Because they make up everything!",
+          "Why did the scarecrow win an award? He was outstanding in his field!",
+          "Why don't eggs tell jokes? They'd crack each other up!"
+        ];
+        return jokes[Math.floor(Math.random() * jokes.length)];
+      }
+      
+      return responses[Math.floor(Math.random() * responses.length)];
+    }
+
+    async function handleSendMessage() {
+      if (!messageInput || isResponding || pauseEnabled) return;
+      
+      const message = messageInput.value.trim();
+      if (!message) return;
+      
+      // Add user message
+      addMessage(message, 'user');
+      
+      // Clear input and disable form
+      messageInput.value = '';
+      isResponding = true;
+      if (sendButton) sendButton.disabled = true;
+      messageInput.disabled = true;
+      
+      // Auto-resize textarea back to single line
+      messageInput.style.height = 'auto';
+      
+      // Show loading message
+      const loadingDiv = addLoadingMessage();
+      
+      try {
+        // Get AI response
+        const startTime = Date.now();
+        const response = await simulateAIResponse(message);
+        const responseTime = Date.now() - startTime;
+        
+        // Update response time
+        const responseTimeEl = document.getElementById('response-time');
+        if (responseTimeEl) {
+          responseTimeEl.textContent = responseTime + 'ms';
+        }
+        
+        // Remove loading and add response
+        removeLoadingMessage();
+        addMessage(response);
+        
+      } catch (error) {
+        removeLoadingMessage();
+        addMessage("Sorry, I encountered an error. Please try again.");
+        showNotification("Error sending message", 'error');
+        console.error('Error:', error);
+      } finally {
+        // Re-enable form
+        isResponding = false;
+        if (sendButton) sendButton.disabled = false;
+        messageInput.disabled = false;
+        messageInput.focus();
+        updateMemoryUsage();
+      }
+    }
+
+    // ===== QUICK ACTIONS =====
+    function addQuickMessage(message) {
+      if (messageInput && !isResponding) {
+        messageInput.value = message;
+        messageInput.focus();
+        // Auto-resize
+        messageInput.style.height = 'auto';
+        messageInput.style.height = messageInput.scrollHeight + 'px';
+      }
+    }
+
+    function clearChat() {
+      if (chatMessages && confirm('Are you sure you want to clear the chat?')) {
+        chatMessages.innerHTML = `
+          <div class="message assistant">
+            <div class="message-avatar">
+              <i class="fas fa-robot"></i>
+            </div>
+            <div class="message-content">
+              Hello! I'm Jarvis, your personal AI assistant. I'm here to learn, adapt, and grow with you. How can I help you today?
+            </div>
+          </div>
+        `;
+        messageCount = 1;
+        updateMessageCount();
+        showNotification("Chat cleared", 'success');
+      }
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const themeIcon = document.getElementById('theme-icon');
+      const themeText = document.getElementById('theme-text');
+      
+      if (currentTheme === 'dark') {
+        html.setAttribute('data-theme', 'light');
+        currentTheme = 'light';
+        if (themeIcon) themeIcon.className = 'fas fa-sun';
+        if (themeText) themeText.textContent = 'Light Mode';
+      } else {
+        html.setAttribute('data-theme', 'dark');
+        currentTheme = 'dark';
+        if (themeIcon) themeIcon.className = 'fas fa-moon';
+        if (themeText) themeText.textContent = 'Dark Mode';
+      }
+      
+      showNotification(`Switched to ${currentTheme} mode`, 'success');
+    }
+
+    // ===== BUTTON HANDLERS =====
+    function toggleNSFW() {
+      const btn = document.getElementById('nsfw-toggle');
+      if (btn) {
+        const isActive = btn.classList.toggle('active');
+        btn.setAttribute('aria-pressed', isActive);
+        showNotification(`NSFW filter ${isActive ? 'enabled' : 'disabled'}`, 'info');
+      }
+    }
+
+    function toggleIncognito() {
+      const btn = document.getElementById('incognito-toggle');
+      if (btn) {
+        const isActive = btn.classList.toggle('active');
+        btn.setAttribute('aria-pressed', isActive);
+        showNotification(`Incognito mode ${isActive ? 'enabled' : 'disabled'}`, 'info');
+      }
+    }
+
+    function togglePause() {
+      const btn = document.getElementById('pause-toggle');
+      if (btn) {
+        pauseEnabled = !pauseEnabled;
+        btn.classList.toggle('active', pauseEnabled);
+        btn.setAttribute('aria-pressed', pauseEnabled);
+        
+        const icon = btn.querySelector('i');
+        if (icon) {
+          icon.className = pauseEnabled ? 'fas fa-play' : 'fas fa-pause';
+        }
+        
+        showNotification(`Assistant ${pauseEnabled ? 'paused' : 'resumed'}`, pauseEnabled ? 'warning' : 'success');
+      }
+    }
+
+    function handleVoiceInput() {
+      // Placeholder for voice input functionality
+      showNotification("Voice input feature coming soon!", 'info');
+    }
+
+    function openSettings() {
+      // Placeholder for settings modal
+      showNotification("Settings panel coming soon!", 'info');
+    }
+
+    function handleEmergency() {
+      if (confirm('Are you sure you want to activate emergency mode?')) {
+        showNotification("Emergency mode activated!", 'warning');
+        // Add emergency functionality here
+      }
+    }
+
+    // ===== INITIALIZATION =====
+    async function initializeApp() {
+      try {
+        console.log('Initializing JARVIS...');
+        
+        // Wait for and get essential DOM elements
+        messageInput = await waitForElement('message-input');
+        chatForm = await waitForElement('chat-form');
+        chatMessages = await waitForElement('chat-messages');
+        sendButton = chatForm.querySelector('.send-btn');
+        
+        console.log('DOM elements found successfully');
+        
+        // Set up form submission handler
+        if (chatForm) {
+          chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            console.log('Form submitted');
+            handleSendMessage();
+          });
+          console.log('Form event listener added');
+        }
+        
+        // Set up textarea auto-resize
+        if (messageInput) {
+          messageInput.addEventListener('input', () => {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = messageInput.scrollHeight + 'px';
+          });
+          
+          // Handle Enter key (without Shift)
+          messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSendMessage();
+            }
+          });
+          
+          console.log('Message input event listeners added');
+          messageInput.focus();
+        }
+        
+        // Set up header button event listeners
+        const buttons = {
+          'nsfw-toggle': toggleNSFW,
+          'incognito-toggle': toggleIncognito,
+          'pause-toggle': togglePause,
+          'voice-btn': handleVoiceInput,
+          'settings-btn': openSettings,
+          'emergency-btn': handleEmergency
+        };
+        
+        Object.entries(buttons).forEach(([id, handler]) => {
+          const btn = document.getElementById(id);
+          if (btn) {
+            btn.addEventListener('click', handler);
+            console.log(`Event listener added for ${id}`);
+          } else {
+            console.warn(`Button ${id} not found`);
+          }
+        });
+        
+        // Initialize UI state
+        updateMessageCount();
+        updateMemoryUsage();
+        
+        // Set up periodic updates
+        setInterval(updateMemoryUsage, 5000);
+        
+        showNotification("JARVIS initialized successfully!", 'success');
+        console.log('JARVIS initialization complete');
+        
+      } catch (error) {
+        console.error('Initialization error:', error);
+        showNotification("Failed to initialize JARVIS", 'error');
+      }
+    }
+
+    // ===== EVENT LISTENERS =====
+    document.addEventListener('DOMContentLoaded', initializeApp);
+    
+    // Handle page visibility changes
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        console.log('JARVIS minimized');
+      } else {
+        console.log('JARVIS restored');
+        if (messageInput) messageInput.focus();
+      }
+    });
+    
+    // Handle window beforeunload
+    window.addEventListener('beforeunload', (e) => {
+      if (messageInput && messageInput.value.trim()) {
+        e.preventDefault();
+        e.returnValue = 'You have unsent messages. Are you sure you want to leave?';
+      }
+    });
+
+    // Expose functions globally for debugging
+    window.jarvis = {
+      addMessage,
+      clearChat,
+      toggleTheme,
+      handleSendMessage,
+      showNotification
+    };
+
+    console.log('JARVIS script loaded');
+  </script>
+</body>
+</html>
